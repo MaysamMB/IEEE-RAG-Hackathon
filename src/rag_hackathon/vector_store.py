@@ -13,6 +13,9 @@ BACKUP_SUFFIX = "_backup"
 class InterruptedRebuildError(RuntimeError):
     """The live collection is missing because an earlier rebuild did not finish."""
 
+class EmbeddingModelMismatchError(RuntimeError):
+    """The index was built with a different embedding model than the configured one."""
+
 def _client():
     Path(settings.chroma_persist_dir).mkdir(parents=True, exist_ok=True)
     return chromadb.PersistentClient(path=settings.chroma_persist_dir)
@@ -80,6 +83,15 @@ def _write(
 def get_collection():
     """Return the live collection, or None if nothing is indexed. Never creates or deletes."""
     return _find_live_collection(_client())
+
+def require_current_embedding_model(collection) -> None:
+    """Question vectors are only comparable with vectors from the same model."""
+    stored = (collection.metadata or {}).get("embedding_model")
+    if stored != settings.embedding_model:
+        raise EmbeddingModelMismatchError(
+            f"Collection '{collection.name}' was indexed with embedding model '{stored}' "
+            f"but '{settings.embedding_model}' is configured. Run a full re-index with --rebuild."
+        )
 
 def upsert_chunks(
     chunks: list[dict],

@@ -1,6 +1,6 @@
 from .config import settings
 from .embeddings import embed_texts
-from .vector_store import get_collection
+from .vector_store import get_collection, require_current_embedding_model
 
 def retrieve(question: str, top_k: int | None = None) -> list[dict]:
     if not question.strip():
@@ -8,6 +8,7 @@ def retrieve(question: str, top_k: int | None = None) -> list[dict]:
     collection = get_collection()
     if collection is None or collection.count() == 0:
         return []
+    require_current_embedding_model(collection)
     query_vector = embed_texts([question])[0]
     result = collection.query(
         query_embeddings=[query_vector],

@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 import unicodedata
-import pymupdf
+from .pdf_text import extract_page_texts
 
 logger = logging.getLogger(__name__)
 
@@ -23,21 +23,19 @@ def load_documents(folder: str | Path) -> list[dict]:
         relative_path = normalize_relative_path(path, root)
         if path.suffix.lower() == ".pdf":
             empty_pages: list[int] = []
-            with pymupdf.open(path) as pdf:
-                for page_index, page in enumerate(pdf, start=1):
-                    text = page.get_text("text").strip()
-                    if text:
-                        records.append({
-                            "text": text,
-                            "metadata": {
-                                "source": path.name,
-                                "source_path": relative_path,
-                                "page": page_index,
-                                "file_type": "pdf",
-                            },
-                        })
-                    else:
-                        empty_pages.append(page_index)
+            for page_index, text in enumerate(extract_page_texts(path), start=1):
+                if text:
+                    records.append({
+                        "text": text,
+                        "metadata": {
+                            "source": path.name,
+                            "source_path": relative_path,
+                            "page": page_index,
+                            "file_type": "pdf",
+                        },
+                    })
+                else:
+                    empty_pages.append(page_index)
             if empty_pages:
                 logger.warning(
                     "%s: no extractable text on pages %s; scanned pages may need OCR.",

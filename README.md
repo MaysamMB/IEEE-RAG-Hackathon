@@ -59,6 +59,14 @@ cp .env.example .env
 
 Put only approved, relevant challenge documents in `data/raw/`. Supported initial formats: PDF and TXT. The PDF loader extracts each page separately so page citations can be retained. Scanned PDFs may require OCR; do not assume they are text-readable.
 
+Arabic PDFs can extract with reversed words. For Arabic pages the loader takes word order from pdfium and uses PyMuPDF text to repair reversed words. The repair is partial, so check every new PDF before relying on it:
+
+```bash
+python scripts/check_pdf_extraction.py data/raw/document.pdf --show 1
+```
+
+Then compare the flagged pages with the page images.
+
 ## 5. Index documents
 
 ```bash
@@ -67,7 +75,7 @@ python scripts/ingest.py
 
 The first run may download the configured embedding model. The vector database is stored under `storage/chroma/` and is intentionally ignored by Git.
 
-A normal run adds or updates chunks and never deletes anything. It stops with an error if the embedding model, chunk settings, or documents folder differ from those stored with the collection. Each collection indexes one documents folder only.
+A normal run adds or updates chunks and never deletes anything. If chunks from an earlier run remain, it prints a warning with their count, because they can still appear in answers. It stops with an error if the embedding model, chunk settings, or documents folder differ from those stored with the collection. Each collection indexes one documents folder only.
 
 Use an explicit full re-index after changing those settings or folder, or after removing, moving, renaming, or shortening documents:
 
@@ -75,7 +83,7 @@ Use an explicit full re-index after changing those settings or folder, or after 
 python scripts/ingest.py --rebuild
 ```
 
-`--rebuild` removes all old chunks. It writes a new collection first and swaps it in only after every chunk is stored. If an error occurs, the existing index is kept and the temporary collection is removed. Stop `app.py` before rebuilding.
+`--rebuild` removes all old chunks. It writes a new collection first and swaps it in only after every chunk is stored. If an error occurs, the existing index is kept and the temporary collection is removed. Stop `app.py` before rebuilding. Questions also stop with an error if the configured embedding model differs from the one used to build the index.
 
 If the program is killed during the swap, questions and normal indexing stop with `InterruptedRebuildError`. Recover by running `--rebuild` again. Do not delete the `_backup` collection before that succeeds. If the documents are no longer available, restore the previous index from Python:
 
