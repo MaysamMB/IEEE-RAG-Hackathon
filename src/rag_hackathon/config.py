@@ -10,7 +10,7 @@ class Settings:
     anthropic_model: str = os.getenv("ANTHROPIC_MODEL", "")
     embedding_model: str = os.getenv(
         "EMBEDDING_MODEL",
-        "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+        "intfloat/multilingual-e5-small",
     )
     ocr_cache_dir: str = os.getenv("OCR_CACHE_DIR", "data/processed/ocr_cache")
     chroma_persist_dir: str = os.getenv("CHROMA_PERSIST_DIR", "storage/chroma")
