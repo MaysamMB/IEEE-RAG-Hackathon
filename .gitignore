@@ -21,3 +21,4 @@ chroma_db*/
 
 # Local generated files
 storage/
+*.egg-info/
