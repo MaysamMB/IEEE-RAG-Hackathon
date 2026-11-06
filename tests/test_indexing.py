@@ -22,7 +22,7 @@ COLLECTION = "test_documents"
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
-def fake_embed(texts: list[str]) -> list[list[float]]:
+def fake_embed(texts: list[str], *, is_query: bool = False) -> list[list[float]]:
     vectors = []
     for text in texts:
         digest = hashlib.sha256(text.encode("utf-8")).digest()
@@ -162,6 +162,21 @@ def test_rebuild_removes_chunks_of_deleted_files(index, docs):
 
     _, collection = stored(index)
     assert collection.get()["ids"] == ["keep.txt::p1::c0"]
+
+
+def test_questions_are_embedded_as_queries(monkeypatch, index, docs):
+    write_txt(docs, "doc.txt", "text")
+    ingest(str(docs))
+    seen = []
+
+    def record(texts, *, is_query=False):
+        seen.append(is_query)
+        return fake_embed(texts)
+
+    monkeypatch.setattr(retrieval, "embed_texts", record)
+    retrieval.retrieve("any question")
+
+    assert seen == [True]
 
 
 def test_rebuilt_collection_is_searchable(index, docs):
@@ -782,7 +797,7 @@ def test_questions_are_refused_with_a_different_embedding_model(monkeypatch, ind
     ingest(str(docs))
     use_settings(monkeypatch, index, embedding_model="another-model")
 
-    def must_not_embed(_):
+    def must_not_embed(_, **__):
         raise AssertionError("the question must not be embedded")
 
     monkeypatch.setattr(retrieval, "embed_texts", must_not_embed)

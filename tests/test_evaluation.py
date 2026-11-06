@@ -197,6 +197,36 @@ def test_summary_separates_in_scope_and_out_of_scope_distances():
     assert summary["by_category"]["direct"]["hit_at_k"] == {"passed": 1, "total": 2}
 
 
+def test_usage_is_averaged_over_real_model_calls_only():
+    rows = [
+        {"input_tokens": 100, "output_tokens": 10},
+        {"input_tokens": 300, "output_tokens": 30},
+        {"input_tokens": 0, "output_tokens": 0},
+    ]
+
+    usage = evaluation.usage_summary(rows)
+
+    assert usage["model_calls"] == 2
+    assert usage["average_input_tokens"] == 200
+    assert usage["average_output_tokens"] == 20
+
+
+def test_cost_stays_empty_without_prices(monkeypatch):
+    monkeypatch.setattr(evaluation, "settings", type("S", (), {"input_price_per_mtok": None, "output_price_per_mtok": None}))
+
+    assert evaluation.usage_summary([{"input_tokens": 1000, "output_tokens": 100}])["average_cost_usd"] is None
+
+
+def test_cost_uses_configured_prices(monkeypatch):
+    monkeypatch.setattr(evaluation, "settings", type("S", (), {"input_price_per_mtok": 2.0, "output_price_per_mtok": 10.0}))
+
+    assert evaluation.usage_summary([{"input_tokens": 1000, "output_tokens": 100}])["average_cost_usd"] == 0.003
+
+
+def test_usage_is_absent_without_model_calls():
+    assert evaluation.usage_summary([{"id": "Q1"}]) is None
+
+
 def test_evaluate_without_answers_never_calls_the_llm(monkeypatch):
     def forbidden(_):
         raise AssertionError("the paid LLM must not be called")

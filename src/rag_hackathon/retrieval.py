@@ -9,7 +9,7 @@ def retrieve(question: str, top_k: int | None = None) -> list[dict]:
     if collection is None or collection.count() == 0:
         return []
     require_current_embedding_model(collection)
-    query_vector = embed_texts([question])[0]
+    query_vector = embed_texts([question], is_query=True)[0]
     result = collection.query(
         query_embeddings=[query_vector],
         n_results=min(top_k or settings.top_k, collection.count()),

@@ -3,7 +3,7 @@ from .generation import generate_answer, source_label
 
 def answer_question(question: str) -> dict:
     hits = retrieve(question)
-    answer = generate_answer(question, hits)
+    generated = generate_answer(question, hits)
     sources = []
     for index, hit in enumerate(hits, start=1):
         metadata = hit["metadata"]
@@ -13,4 +13,10 @@ def answer_question(question: str) -> dict:
             "page": metadata.get("page", "Unknown"),
             "distance": hit["distance"],
         })
-    return {"answer": answer, "sources": sources, "retrieved_count": len(hits)}
+    return {
+        "answer": generated.text,
+        "sources": sources,
+        "retrieved_count": len(hits),
+        "input_tokens": generated.input_tokens,
+        "output_tokens": generated.output_tokens,
+    }

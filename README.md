@@ -7,7 +7,7 @@ A domain-neutral Python starter workspace for a three-person team. The final pro
 - [x] Initial repository structure
 - [x] PDF/TXT ingestion with page metadata
 - [x] Paragraph-aware overlapping chunking
-- [x] Multilingual embedding adapter (local Sentence Transformers)
+- [x] Multilingual embedding adapter (`intfloat/multilingual-e5-small`, chosen by comparing three models on Arabic questions)
 - [x] Persistent ChromaDB vector store
 - [x] Retrieval with source metadata
 - [x] Claude answer generation with source IDs
@@ -16,7 +16,7 @@ A domain-neutral Python starter workspace for a three-person team. The final pro
 - [x] Arabic PDF repair and OCR for scanned pages
 - [x] Sample data and sample questions
 - [ ] Select assigned problem and approved source documents
-- [ ] Evaluate multilingual embedding choices on real data
+- [ ] Re-check the embedding model on the official challenge data
 - [ ] Build at least 10 adjudicated benchmark questions
 - [ ] Calibrate retrieval threshold and citation behavior
 - [ ] Add business research and final presentation
@@ -156,7 +156,7 @@ python scripts/evaluate.py --questions evaluation/questions.json --answers
 python scripts/evaluate.py --questions evaluation/questions.sample.json --folder data/sample --rebuild
 ```
 
-The first command scores retrieval locally and costs nothing. `--answers` calls the paid model once per question and also scores facts, citations, and refusal. `--rebuild` re-indexes `--folder` first. Each run is saved under `evaluation/results/`. The script prints the largest in-scope and smallest out-of-scope distance; use them to calibrate `MAX_COSINE_DISTANCE`, and keep it blank while measuring. Fact matching is a simple text check. In `expected_answer_facts`, separate accepted spellings with `|`, for example `فصلين|فصلان`, because Arabic endings change with grammar. Read the saved answers to judge faithfulness.
+The first command scores retrieval locally and costs nothing. `--answers` calls the paid model once per question and also scores facts, citations, and refusal. `--rebuild` re-indexes `--folder` first. Each run is saved under `evaluation/results/`. The script prints the largest in-scope and smallest out-of-scope distance; use them to calibrate `MAX_COSINE_DISTANCE`, and keep it blank while measuring. Fact matching is a simple text check. In `expected_answer_facts`, separate accepted spellings with `|`, for example `فصلين|فصلان`, because Arabic endings change with grammar. Read the saved answers to judge faithfulness. With `--answers`, the script reports the average tokens per answer. Add your model prices to `.env` to see the cost in USD.
 
 Report measured results only. Suggested measures: Precision@k, Recall@k, faithfulness, citation accuracy, and refusal accuracy. A small, manually reviewed test set is better than fabricated metrics.
 

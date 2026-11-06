@@ -85,6 +85,24 @@ def score_answer(question: dict, answer: str, sources: list[dict]) -> dict:
     )
     return scores
 
+def usage_summary(rows: list[dict]) -> dict | None:
+    """Average tokens per model call; cost appears only when prices are configured."""
+    calls = [row for row in rows if row.get("input_tokens")]
+    if not calls:
+        return None
+    input_tokens = mean(row["input_tokens"] for row in calls)
+    output_tokens = mean(row["output_tokens"] for row in calls)
+    usage = {
+        "model_calls": len(calls),
+        "average_input_tokens": round(input_tokens),
+        "average_output_tokens": round(output_tokens),
+        "average_cost_usd": None,
+    }
+    if settings.input_price_per_mtok is not None and settings.output_price_per_mtok is not None:
+        cost = input_tokens * settings.input_price_per_mtok + output_tokens * settings.output_price_per_mtok
+        usage["average_cost_usd"] = round(cost / 1_000_000, 6)
+    return usage
+
 def _share(rows: list[dict], key: str) -> dict | None:
     values = [row[key] for row in rows if key in row]
     return {"passed": sum(values), "total": len(values)} if values else None
@@ -108,6 +126,7 @@ def summarize(rows: list[dict]) -> dict:
         "answers_with_all_facts": _share(rows, "facts_correct"),
         "correct_citations": _share(rows, "citation_correct"),
         "correct_refusal_decisions": _share(rows, "refusal_correct"),
+        "usage": usage_summary(rows),
         "errors": sum("error" in row for row in rows),
         "by_category": {},
     }
@@ -134,6 +153,8 @@ def evaluate(questions: list[dict], *, with_answers: bool = False) -> dict:
             try:
                 result = answer_question(question["question"])
                 row["answer"] = result["answer"]
+                row["input_tokens"] = result["input_tokens"]
+                row["output_tokens"] = result["output_tokens"]
                 row.update(score_answer(question, result["answer"], result["sources"]))
             except Exception as exc:
                 row["error"] = f"{type(exc).__name__}: {exc}"
