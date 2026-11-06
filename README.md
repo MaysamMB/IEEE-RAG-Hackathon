@@ -156,7 +156,7 @@ python scripts/evaluate.py --questions evaluation/questions.json --answers
 python scripts/evaluate.py --questions evaluation/questions.sample.json --folder data/sample --rebuild
 ```
 
-The first command scores retrieval locally and costs nothing. `--answers` calls the paid model once per question and also scores facts, citations, and refusal. `--rebuild` re-indexes `--folder` first. Each run is saved under `evaluation/results/`. The script prints the largest in-scope and smallest out-of-scope distance; use them to calibrate `MAX_COSINE_DISTANCE`, and keep it blank while measuring. Fact matching is a simple text check. In `expected_answer_facts`, separate accepted spellings with `|`, for example `فصلين|فصلان`, because Arabic endings change with grammar. Read the saved answers to judge faithfulness.
+The first command scores retrieval locally and costs nothing. `--answers` calls the paid model once per question and also scores facts, citations, and refusal. `--rebuild` re-indexes `--folder` first. Each run is saved under `evaluation/results/`. The script prints the largest in-scope and smallest out-of-scope distance; use them to calibrate `MAX_COSINE_DISTANCE`, and keep it blank while measuring. Fact matching is a simple text check. In `expected_answer_facts`, separate accepted spellings with `|`, for example `فصلين|فصلان`, because Arabic endings change with grammar. Read the saved answers to judge faithfulness. With `--answers`, the script reports the average tokens per answer. Add your model prices to `.env` to see the cost in USD.
 
 Report measured results only. Suggested measures: Precision@k, Recall@k, faithfulness, citation accuracy, and refusal accuracy. A small, manually reviewed test set is better than fabricated metrics.
 

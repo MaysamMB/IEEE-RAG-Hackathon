@@ -18,6 +18,16 @@ class Settings:
     chunk_size: int = int(os.getenv("CHUNK_SIZE", "1000"))
     chunk_overlap: int = int(os.getenv("CHUNK_OVERLAP", "150"))
     top_k: int = int(os.getenv("TOP_K", "4"))
+    input_price_per_mtok: float | None = (
+        float(os.environ["INPUT_PRICE_PER_MTOK"])
+        if os.getenv("INPUT_PRICE_PER_MTOK", "").strip()
+        else None
+    )
+    output_price_per_mtok: float | None = (
+        float(os.environ["OUTPUT_PRICE_PER_MTOK"])
+        if os.getenv("OUTPUT_PRICE_PER_MTOK", "").strip()
+        else None
+    )
     max_cosine_distance: float | None = (
         float(os.environ["MAX_COSINE_DISTANCE"])
         if os.getenv("MAX_COSINE_DISTANCE", "").strip()

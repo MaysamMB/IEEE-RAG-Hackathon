@@ -23,6 +23,11 @@ def print_report(report: dict) -> None:
     print(f"Correct citation:  {share(summary['correct_citations'])}")
     print(f"Refusal decision:  {share(summary['correct_refusal_decisions'])}")
     print(f"Errors: {summary['errors']}")
+    usage = summary["usage"]
+    if usage:
+        cost = usage["average_cost_usd"]
+        cost_text = f"${cost}" if cost is not None else "set INPUT_PRICE_PER_MTOK and OUTPUT_PRICE_PER_MTOK"
+        print(f"Per answer: {usage['average_input_tokens']} input and {usage['average_output_tokens']} output tokens | cost: {cost_text}")
     print("\nFor calibrating MAX_COSINE_DISTANCE (leave it blank while measuring):")
     print(f"  largest top distance, in-scope questions:  {summary['largest_in_scope_distance']}")
     print(f"  smallest top distance, out-of-scope:       {summary['smallest_out_of_scope_distance']}")

@@ -34,11 +34,12 @@ def app():
 def test_answer_sources_distinguish_same_named_files(monkeypatch):
     hits = [make_hit("2023/policy.pdf"), make_hit("2024/policy.pdf")]
     monkeypatch.setattr(pipeline, "retrieve", lambda question: hits)
-    monkeypatch.setattr(pipeline, "generate_answer", lambda question, found: "answer")
+    monkeypatch.setattr(pipeline, "generate_answer", lambda question, found: generation.GeneratedAnswer("answer", 11, 7))
 
     result = pipeline.answer_question("question")
 
     assert [s["source"] for s in result["sources"]] == ["2023/policy.pdf", "2024/policy.pdf"]
+    assert (result["input_tokens"], result["output_tokens"]) == (11, 7)
 
 
 def test_prompt_cites_relative_paths(monkeypatch):
@@ -50,16 +51,30 @@ def test_prompt_cites_relative_paths(monkeypatch):
 
         def create(self, **kwargs):
             sent.update(kwargs)
-            return SimpleNamespace(content=[SimpleNamespace(type="text", text="answer")])
+            return SimpleNamespace(
+                content=[SimpleNamespace(type="text", text="answer")],
+                usage=SimpleNamespace(input_tokens=120, output_tokens=30),
+            )
 
     monkeypatch.setattr(generation, "Anthropic", FakeClient)
     monkeypatch.setattr(
         generation, "settings", replace(config.settings, anthropic_api_key="test", anthropic_model="test")
     )
 
-    generation.generate_answer("question", [make_hit("2024/policy.pdf")])
+    answer = generation.generate_answer("question", [make_hit("2024/policy.pdf")])
 
     assert "Source: 2024/policy.pdf; Page: 3" in sent["messages"][0]["content"]
+    assert answer == generation.GeneratedAnswer("answer", 120, 30)
+
+
+def test_refusal_without_evidence_needs_no_key_or_model_call(monkeypatch):
+    def forbidden(api_key):
+        raise AssertionError("no model call is needed")
+
+    monkeypatch.setattr(generation, "Anthropic", forbidden)
+    monkeypatch.setattr(generation, "settings", replace(config.settings, anthropic_api_key="", anthropic_model=""))
+
+    assert generation.generate_answer("question", []) == generation.GeneratedAnswer(generation.REFUSAL_MESSAGE)
 
 
 def test_source_label_falls_back_for_older_metadata():
