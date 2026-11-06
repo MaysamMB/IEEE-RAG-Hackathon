@@ -1,0 +1,23 @@
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.DS_Store
+storage/
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+# Vector database
+chroma_db/
+chroma_db*/
+*.sqlite3
+
+# Local generated files
+storage/

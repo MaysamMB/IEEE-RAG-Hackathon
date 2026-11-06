@@ -1,0 +1,5 @@
+Metadata-Version: 2.4
+Name: ieee-rag-hackathon-starter
+Version: 0.1.0
+Summary: Domain-neutral RAG starter for the IEEE RAG Hackathon
+Requires-Python: >=3.11

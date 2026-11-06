@@ -1,0 +1,30 @@
+[
+  {
+    "id": "Q01",
+    "category": "direct_fact",
+    "question": "REPLACE_WITH_A_REAL_QUESTION",
+    "expected_answer_facts": ["REPLACE_WITH_REQUIRED_FACT"],
+    "expected_sources": [
+      {"source": "REPLACE_WITH_FILENAME", "page": 1}
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "Q02",
+    "category": "paraphrase",
+    "question": "REWORD_Q01_WITHOUT_COPYING_ITS_WORDING",
+    "expected_answer_facts": ["REPLACE_WITH_REQUIRED_FACT"],
+    "expected_sources": [
+      {"source": "REPLACE_WITH_FILENAME", "page": 1}
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "Q03",
+    "category": "out_of_scope",
+    "question": "ASK_FOR_A_FACT_NOT_PRESENT_IN_THE_DOCUMENTS",
+    "expected_answer_facts": [],
+    "expected_sources": [],
+    "should_refuse": true
+  }
+]
