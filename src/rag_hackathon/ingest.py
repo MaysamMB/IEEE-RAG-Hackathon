@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+from typing import Iterable
 from .config import settings
 from .documents import load_documents
 from .chunking import chunk_records
@@ -8,10 +9,15 @@ from .vector_store import get_collection, rebuild_collection, upsert_chunks
 
 logger = logging.getLogger(__name__)
 
-def ingest(folder: str = "data/raw", *, rebuild: bool = False) -> int:
+def ingest(
+    folder: str = "data/raw",
+    *,
+    rebuild: bool = False,
+    ocr_files: Iterable[str] = (),
+) -> int:
     """Index documents. Only rebuild=True replaces existing chunks; all reads and
     embedding work happen first, so a failure there leaves the live index untouched."""
-    pages = load_documents(folder)
+    pages = load_documents(folder, ocr_files)
     chunks = chunk_records(pages, settings.chunk_size, settings.chunk_overlap)
     vectors = embed_texts([c["text"] for c in chunks])
     write = rebuild_collection if rebuild else upsert_chunks

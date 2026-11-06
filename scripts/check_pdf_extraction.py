@@ -73,7 +73,7 @@ def main() -> int:
                "lam_alef", "damaged", "reversed_lines", "detached_marks", "glued_numbers"]
     print(" | ".join(columns) + " | flags")
     flagged = 0
-    texts = extract_page_texts(args.pdf)
+    texts = extract_page_texts(args.pdf, use_ocr=False)
     with pymupdf.open(args.pdf) as pdf:
         images = [len(page.get_images()) for page in pdf]
     for number, (text, image_count) in enumerate(zip(texts, images), start=1):
@@ -85,6 +85,7 @@ def main() -> int:
         print(f"\n--- extracted text, page {args.show} ---")
         print(texts[args.show - 1])
     print(f"\nFlagged pages: {flagged} of {len(texts)}")
+    print("Pages flagged NO_TEXT with images are read with OCR during indexing.")
     return 0
 
 

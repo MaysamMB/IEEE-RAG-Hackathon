@@ -606,18 +606,27 @@ def test_rebuilt_index_survives_process_restart(index):
 
 def run_cli(monkeypatch, *args):
     calls = []
-    monkeypatch.setattr(ingest_module, "ingest", lambda folder, *, rebuild=False: calls.append((folder, rebuild)))
+    def fake_ingest(folder, *, rebuild=False, ocr_files=()):
+        calls.append((folder, rebuild, list(ocr_files)))
+
+    monkeypatch.setattr(ingest_module, "ingest", fake_ingest)
     monkeypatch.setattr(sys, "argv", ["ingest.py", *args])
     runpy.run_path(str(REPO_ROOT / "scripts" / "ingest.py"), run_name="__main__")
     return calls
 
 
 def test_cli_does_not_rebuild_by_default(monkeypatch):
-    assert run_cli(monkeypatch) == [("data/raw", False)]
+    assert run_cli(monkeypatch) == [("data/raw", False, [])]
 
 
 def test_cli_rebuild_flag_requests_rebuild(monkeypatch):
-    assert run_cli(monkeypatch, "--rebuild") == [("data/raw", True)]
+    assert run_cli(monkeypatch, "--rebuild") == [("data/raw", True, [])]
+
+
+def test_cli_passes_requested_ocr_files(monkeypatch):
+    calls = run_cli(monkeypatch, "--ocr-file", "a.pdf", "--ocr-file", "b/c.pdf")
+
+    assert calls == [("data/raw", False, ["a.pdf", "b/c.pdf"])]
 
 
 # --- Extraction warnings and path normalization ---

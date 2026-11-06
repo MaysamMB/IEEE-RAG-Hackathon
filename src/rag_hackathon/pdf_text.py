@@ -12,6 +12,8 @@ import unicodedata
 import pymupdf
 import pypdfium2
 
+from .ocr import ocr_pdf_pages
+
 ARABIC_LETTER = re.compile("[ء-ي\ufb50-\ufdff\ufe70-\ufefc]")
 ARABIC_WORD = re.compile("[ء-يً-ْـ]+")
 MARKS = re.compile("[ً-ْـ]")
@@ -56,8 +58,8 @@ def repair_arabic_words(ordered_text: str, reference_text: str) -> str:
 
     return ARABIC_WORD.sub(repair, ordered_text)
 
-def extract_page_texts(path: str | Path) -> list[str]:
-    """Return one text per PDF page, in page order; pages without text stay empty."""
+def _digital_page_texts(path: str | Path) -> list[str]:
+    """Return the text stored in each page; pages without text stay empty."""
     with pymupdf.open(path) as pdf:
         reference_texts = [page.get_text("text").strip() for page in pdf]
     if not any(ARABIC_LETTER.search(text) for text in reference_texts):
@@ -76,3 +78,32 @@ def extract_page_texts(path: str | Path) -> list[str]:
         return texts
     finally:
         document.close()
+
+def extract_page_texts(
+    path: str | Path,
+    *,
+    use_ocr: bool = True,
+    force_ocr: bool = False,
+) -> list[str]:
+    """Return one text per PDF page, in page order; unreadable pages stay empty.
+
+    Pages with an image but no text are treated as scanned and use OCR, unless use_ocr is
+    False. force_ocr reads every page with OCR, for files whose stored text is too damaged.
+    If OCR fails on a page, that page keeps its stored text.
+    """
+    texts = _digital_page_texts(path)
+    if not use_ocr:
+        return texts
+    if force_ocr:
+        pages = list(range(1, len(texts) + 1))
+    else:
+        with pymupdf.open(path) as pdf:
+            pages = [
+                number
+                for number, (page, text) in enumerate(zip(pdf, texts), start=1)
+                if not text and page.get_images()
+            ]
+    for number, text in ocr_pdf_pages(path, pages).items():
+        if text:
+            texts[number - 1] = text
+    return texts

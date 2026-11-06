@@ -67,6 +67,16 @@ python scripts/check_pdf_extraction.py data/raw/document.pdf --show 1
 
 Then compare the flagged pages with the page images.
 
+Pages with an image but no text are treated as scanned and read with OCR during indexing. If a whole file extracts badly, read it entirely with OCR:
+
+```bash
+python scripts/ingest.py --rebuild --ocr-file document.pdf
+```
+
+OCR runs on the CPU and is slow, roughly one to two minutes per page on our test machine. Each finished page is saved under `data/processed/ocr_cache/`, so later runs reuse it. The first OCR run downloads about 300 MB of models, so run it once before the event. OCR can misread letters and digits, so check important values against the page.
+
+After pulling changes, run `pip install -r requirements.txt` again before starting the app. `app.py` needs Gradio 6.31 or later: `launch(css=...)` fails with a `TypeError` on Gradio 5.50.
+
 ## 5. Index documents
 
 ```bash
