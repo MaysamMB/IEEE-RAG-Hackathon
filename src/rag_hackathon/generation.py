@@ -16,7 +16,7 @@ def generate_answer(question: str, hits: list[dict]) -> str:
     if not settings.anthropic_model:
         raise RuntimeError("ANTHROPIC_MODEL is missing. Set a model available to your API account in .env.")
     if not hits:
-        return "The available documents do not contain enough information to answer this question."
+        return "لا تحتوي المستندات المتاحة على معلومات كافية للإجابة عن هذا السؤال."
 
     context_parts = []
     for index, hit in enumerate(hits, start=1):

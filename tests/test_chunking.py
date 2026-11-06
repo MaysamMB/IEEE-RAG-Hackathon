@@ -1,7 +1,7 @@
 import pytest
 from rag_hackathon.chunking import chunk_text
 
-def test_chunking_returns_text_and_covers_input():
+def test_unbroken_text_is_split_into_multiple_chunks():
     text = "A" * 1200
     chunks = chunk_text(text, size=500, overlap=100)
     assert len(chunks) >= 3

@@ -10,7 +10,7 @@ Help a three-person team build a reliable, demonstrable, commercially plausible 
 - Never invent judging rules, statistics, evaluation scores, sources, costs, or test results.
 
 ## Language
-- Product UI default: Arabic.
+- Official product UI language: Arabic. All user-facing text must be Arabic with RTL support.
 - Explain decisions and teach the user in Arabic unless asked otherwise.
 - Keep code, identifiers, technical names, and comments in English.
 - Do not assume the input documents are English. The challenge may involve Arabic, English, or mixed-language data.
