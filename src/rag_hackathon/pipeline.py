@@ -1,5 +1,5 @@
 from .retrieval import retrieve
-from .generation import generate_answer
+from .generation import generate_answer, source_label
 
 def answer_question(question: str) -> dict:
     hits = retrieve(question)
@@ -9,7 +9,7 @@ def answer_question(question: str) -> dict:
         metadata = hit["metadata"]
         sources.append({
             "id": f"S{index}",
-            "source": metadata.get("source", "Unknown"),
+            "source": source_label(metadata),
             "page": metadata.get("page", "Unknown"),
             "distance": hit["distance"],
         })

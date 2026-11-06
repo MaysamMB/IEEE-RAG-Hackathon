@@ -10,6 +10,10 @@ Do not invent page numbers, sources, facts, or quotations. If sources conflict,
 explain the conflict and cite each relevant source. Answer in the user's language.
 """
 
+def source_label(metadata: dict) -> str:
+    """Prefer the relative path: file names alone are ambiguous across folders."""
+    return metadata.get("source_path") or metadata.get("source") or "Unknown"
+
 def generate_answer(question: str, hits: list[dict]) -> str:
     if not settings.anthropic_api_key:
         raise RuntimeError("ANTHROPIC_API_KEY is missing. Set it in your local .env file.")
@@ -22,7 +26,7 @@ def generate_answer(question: str, hits: list[dict]) -> str:
     for index, hit in enumerate(hits, start=1):
         meta = hit["metadata"]
         context_parts.append(
-            f"[S{index}] Source: {meta.get('source', 'Unknown')}; "
+            f"[S{index}] Source: {source_label(meta)}; "
             f"Page: {meta.get('page', 'Unknown')}\n{hit['text']}"
         )
     prompt = (

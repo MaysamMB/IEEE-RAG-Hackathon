@@ -12,7 +12,9 @@ A domain-neutral Python starter workspace for a three-person team. The final pro
 - [x] Retrieval with source metadata
 - [x] Claude answer generation with source IDs
 - [x] Minimal Arabic Gradio interface
-- [x] Evaluation dataset template and starter unit test
+- [x] Evaluation dataset template and evaluation script
+- [x] Arabic PDF repair and OCR for scanned pages
+- [x] Sample data and sample questions
 - [ ] Select assigned problem and approved source documents
 - [ ] Evaluate multilingual embedding choices on real data
 - [ ] Build at least 10 adjudicated benchmark questions
@@ -22,6 +24,18 @@ A domain-neutral Python starter workspace for a three-person team. The final pro
 ## Language policy
 
 The official product UI language is Arabic. Code, identifiers, and comments stay in English. Source documents may be Arabic, English, or mixed.
+
+## Architecture
+
+```text
+Indexing:  PDF/TXT -> documents.py + pdf_text.py + ocr.py -> chunking.py -> embeddings.py -> vector_store.py (ChromaDB)
+Question:  question -> retrieval.py -> generation.py (Claude) -> pipeline.py -> app.py (Gradio)
+Measuring: evaluation/questions.json -> scripts/evaluate.py -> evaluation/results/
+```
+
+## AI disclosure
+
+Claude Code was used to write and review code, tests, and documentation in this repository. The prompts in `docs/prompts/` were written to support the business, marketing, and presentation work. The team reviewed the results and is responsible for explaining every part of the project.
 
 ## 1. Requirements
 
@@ -55,9 +69,38 @@ pip install -e .
 cp .env.example .env
 ```
 
+## Quick trial with sample data
+
+`data/sample/` holds a fictional Arabic guide, so the project can run without private documents:
+
+```bash
+python scripts/ingest.py --folder data/sample --rebuild
+python app.py
+```
+
+Each collection indexes one folder, so use `--rebuild` when you move to `data/raw`.
+
 ## 4. Add documents
 
 Put only approved, relevant challenge documents in `data/raw/`. Supported initial formats: PDF and TXT. The PDF loader extracts each page separately so page citations can be retained. Scanned PDFs may require OCR; do not assume they are text-readable.
+
+Arabic PDFs can extract with reversed words. For Arabic pages the loader takes word order from pdfium and uses PyMuPDF text to repair reversed words. The repair is partial, so check every new PDF before relying on it:
+
+```bash
+python scripts/check_pdf_extraction.py data/raw/document.pdf --show 1
+```
+
+Then compare the flagged pages with the page images.
+
+Pages with an image but no text are treated as scanned and read with OCR during indexing. If a whole file extracts badly, read it entirely with OCR:
+
+```bash
+python scripts/ingest.py --rebuild --ocr-file document.pdf
+```
+
+OCR runs on the CPU and is slow, roughly one to two minutes per page on our test machine. Each finished page is saved under `data/processed/ocr_cache/`, so later runs reuse it. The first OCR run downloads about 300 MB of models, so run it once before the event. OCR can misread letters and digits, so check important values against the page.
+
+`requirements.lock.txt` records the exact versions tested on Windows with Python 3.14. After pulling changes, run `pip install -r requirements.txt` again before starting the app. `app.py` needs Gradio 6.31 or later: `launch(css=...)` fails with a `TypeError` on Gradio 5.50.
 
 ## 5. Index documents
 
@@ -67,7 +110,7 @@ python scripts/ingest.py
 
 The first run may download the configured embedding model. The vector database is stored under `storage/chroma/` and is intentionally ignored by Git.
 
-A normal run adds or updates chunks and never deletes anything. It stops with an error if the embedding model, chunk settings, or documents folder differ from those stored with the collection. Each collection indexes one documents folder only.
+A normal run adds or updates chunks and never deletes anything. If chunks from an earlier run remain, it prints a warning with their count, because they can still appear in answers. It stops with an error if the embedding model, chunk settings, or documents folder differ from those stored with the collection. Each collection indexes one documents folder only.
 
 Use an explicit full re-index after changing those settings or folder, or after removing, moving, renaming, or shortening documents:
 
@@ -75,7 +118,7 @@ Use an explicit full re-index after changing those settings or folder, or after 
 python scripts/ingest.py --rebuild
 ```
 
-`--rebuild` removes all old chunks. It writes a new collection first and swaps it in only after every chunk is stored. If an error occurs, the existing index is kept and the temporary collection is removed. Stop `app.py` before rebuilding.
+`--rebuild` removes all old chunks. It writes a new collection first and swaps it in only after every chunk is stored. If an error occurs, the existing index is kept and the temporary collection is removed. Stop `app.py` before rebuilding. Questions also stop with an error if the configured embedding model differs from the one used to build the index.
 
 If the program is killed during the swap, questions and normal indexing stop with `InterruptedRebuildError`. Recover by running `--rebuild` again. Do not delete the `_backup` collection before that succeeds. If the documents are no longer available, restore the previous index from Python:
 
@@ -104,6 +147,16 @@ pytest -q
 ## 8. Evaluation
 
 Copy `evaluation/questions.template.json` to `evaluation/questions.json`. Fill it with at least 10 questions, expected answer facts, expected source/page, and a category. Include direct, paraphrased, multi-hop, out-of-scope, and conflicting/old-source questions where relevant. Do not count template examples as evaluation results.
+
+Run the evaluation:
+
+```bash
+python scripts/evaluate.py --questions evaluation/questions.json
+python scripts/evaluate.py --questions evaluation/questions.json --answers
+python scripts/evaluate.py --questions evaluation/questions.sample.json --folder data/sample --rebuild
+```
+
+The first command scores retrieval locally and costs nothing. `--answers` calls the paid model once per question and also scores facts, citations, and refusal. `--rebuild` re-indexes `--folder` first. Each run is saved under `evaluation/results/`. The script prints the largest in-scope and smallest out-of-scope distance; use them to calibrate `MAX_COSINE_DISTANCE`, and keep it blank while measuring. Fact matching is a simple text check. In `expected_answer_facts`, separate accepted spellings with `|`, for example `فصلين|فصلان`, because Arabic endings change with grammar. Read the saved answers to judge faithfulness.
 
 Report measured results only. Suggested measures: Precision@k, Recall@k, faithfulness, citation accuracy, and refusal accuracy. A small, manually reviewed test set is better than fabricated metrics.
 

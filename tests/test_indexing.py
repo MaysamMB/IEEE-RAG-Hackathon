@@ -606,18 +606,31 @@ def test_rebuilt_index_survives_process_restart(index):
 
 def run_cli(monkeypatch, *args):
     calls = []
-    monkeypatch.setattr(ingest_module, "ingest", lambda folder, *, rebuild=False: calls.append((folder, rebuild)))
+    def fake_ingest(folder, *, rebuild=False, ocr_files=()):
+        calls.append((folder, rebuild, list(ocr_files)))
+
+    monkeypatch.setattr(ingest_module, "ingest", fake_ingest)
     monkeypatch.setattr(sys, "argv", ["ingest.py", *args])
     runpy.run_path(str(REPO_ROOT / "scripts" / "ingest.py"), run_name="__main__")
     return calls
 
 
 def test_cli_does_not_rebuild_by_default(monkeypatch):
-    assert run_cli(monkeypatch) == [("data/raw", False)]
+    assert run_cli(monkeypatch) == [("data/raw", False, [])]
 
 
 def test_cli_rebuild_flag_requests_rebuild(monkeypatch):
-    assert run_cli(monkeypatch, "--rebuild") == [("data/raw", True)]
+    assert run_cli(monkeypatch, "--rebuild") == [("data/raw", True, [])]
+
+
+def test_cli_indexes_requested_folder(monkeypatch):
+    assert run_cli(monkeypatch, "--folder", "data/sample") == [("data/sample", False, [])]
+
+
+def test_cli_passes_requested_ocr_files(monkeypatch):
+    calls = run_cli(monkeypatch, "--ocr-file", "a.pdf", "--ocr-file", "b/c.pdf")
+
+    assert calls == [("data/raw", False, ["a.pdf", "b/c.pdf"])]
 
 
 # --- Extraction warnings and path normalization ---
@@ -760,3 +773,55 @@ def test_rebuild_can_switch_documents_root(index, docs, tmp_path):
     _, collection = stored(index)
     assert collection.get()["ids"] == ["new.txt::p1::c0"]
     assert collection.metadata["documents_root"] == other.resolve().as_posix()
+
+
+# --- Embedding model check at question time ---
+
+def test_questions_are_refused_with_a_different_embedding_model(monkeypatch, index, docs):
+    write_txt(docs, "doc.txt", "text")
+    ingest(str(docs))
+    use_settings(monkeypatch, index, embedding_model="another-model")
+
+    def must_not_embed(_):
+        raise AssertionError("the question must not be embedded")
+
+    monkeypatch.setattr(retrieval, "embed_texts", must_not_embed)
+    with pytest.raises(vector_store.EmbeddingModelMismatchError, match="--rebuild"):
+        retrieval.retrieve("any question")
+
+
+# --- Stale chunks warning ---
+
+def test_normal_ingest_warns_about_stale_chunks(index, docs, caplog):
+    write_txt(docs, "one.txt", "first")
+    write_txt(docs, "two.txt", "second")
+    ingest(str(docs))
+    (docs / "two.txt").unlink()
+
+    with caplog.at_level(logging.WARNING, logger="rag_hackathon.ingest"):
+        ingest(str(docs))
+
+    assert "1 stale chunks" in caplog.text
+    assert "--rebuild" in caplog.text
+
+
+def test_no_stale_warning_when_index_matches_documents(index, docs, caplog):
+    write_txt(docs, "doc.txt", "text")
+    ingest(str(docs))
+
+    with caplog.at_level(logging.WARNING, logger="rag_hackathon.ingest"):
+        ingest(str(docs))
+
+    assert "stale" not in caplog.text
+
+
+def test_no_stale_warning_after_rebuild(index, docs, caplog):
+    write_txt(docs, "one.txt", "first")
+    write_txt(docs, "two.txt", "second")
+    ingest(str(docs))
+    (docs / "two.txt").unlink()
+
+    with caplog.at_level(logging.WARNING, logger="rag_hackathon.ingest"):
+        ingest(str(docs), rebuild=True)
+
+    assert "stale" not in caplog.text

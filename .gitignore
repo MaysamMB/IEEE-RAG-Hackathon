@@ -22,3 +22,7 @@ chroma_db*/
 # Local generated files
 storage/
 *.egg-info/
+
+# Evaluation output
+evaluation/results/
+evaluation/questions.json

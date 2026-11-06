@@ -12,6 +12,7 @@ class Settings:
         "EMBEDDING_MODEL",
         "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
     )
+    ocr_cache_dir: str = os.getenv("OCR_CACHE_DIR", "data/processed/ocr_cache")
     chroma_persist_dir: str = os.getenv("CHROMA_PERSIST_DIR", "storage/chroma")
     chroma_collection: str = os.getenv("CHROMA_COLLECTION", "hackathon_documents")
     chunk_size: int = int(os.getenv("CHUNK_SIZE", "1000"))
