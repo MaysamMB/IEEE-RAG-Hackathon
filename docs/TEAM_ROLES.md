@@ -19,7 +19,7 @@ These are suggested primary ownership areas, not silos. Every member should unde
 - Integration with the user interface
 
 ## Member C — Product, Evaluation, and Pitch
-- English user interface and usability
+- Arabic (RTL) user interface and usability
 - Build benchmark questions with expected evidence
 - Run evaluation with Members A/B
 - README, demo script, and presentation

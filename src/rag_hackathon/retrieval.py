@@ -6,7 +6,7 @@ def retrieve(question: str, top_k: int | None = None) -> list[dict]:
     if not question.strip():
         return []
     collection = get_collection()
-    if collection.count() == 0:
+    if collection is None or collection.count() == 0:
         return []
     query_vector = embed_texts([question])[0]
     result = collection.query(

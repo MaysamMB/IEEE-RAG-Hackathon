@@ -19,6 +19,10 @@ A domain-neutral Python starter workspace for a three-person team. The final pro
 - [ ] Calibrate retrieval threshold and citation behavior
 - [ ] Add business research and final presentation
 
+## Language policy
+
+The official product UI language is Arabic. Code, identifiers, and comments stay in English. Source documents may be Arabic, English, or mixed.
+
 ## 1. Requirements
 
 - Python 3.11 or later (use the Python version available and supported by your libraries)
@@ -62,6 +66,26 @@ python scripts/ingest.py
 ```
 
 The first run may download the configured embedding model. The vector database is stored under `storage/chroma/` and is intentionally ignored by Git.
+
+A normal run adds or updates chunks and never deletes anything. It stops with an error if the embedding model, chunk settings, or documents folder differ from those stored with the collection. Each collection indexes one documents folder only.
+
+Use an explicit full re-index after changing those settings or folder, or after removing, moving, renaming, or shortening documents:
+
+```bash
+python scripts/ingest.py --rebuild
+```
+
+`--rebuild` removes all old chunks. It writes a new collection first and swaps it in only after every chunk is stored. If an error occurs, the existing index is kept and the temporary collection is removed. Stop `app.py` before rebuilding.
+
+If the program is killed during the swap, questions and normal indexing stop with `InterruptedRebuildError`. Recover by running `--rebuild` again. Do not delete the `_backup` collection before that succeeds. If the documents are no longer available, restore the previous index from Python:
+
+```python
+import chromadb
+client = chromadb.PersistentClient(path="storage/chroma")
+client.get_collection("hackathon_documents_backup").modify(name="hackathon_documents")
+```
+
+Pages with no extractable text are skipped with a warning that names the file and pages. Such pages may be scanned and need OCR.
 
 ## 6. Launch the Arabic demo
 

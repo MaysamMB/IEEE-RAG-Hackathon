@@ -4,7 +4,7 @@
 Upload the official judging guide, Bootcamp Sessions 1–3, Lecture 5, and the handwritten lecture notes. Keep these as competition reference materials.
 
 ## Claude Project Instructions
-Use `CLAUDE.md` as the project instruction text. Also tell Claude: UI output is English; explain decisions to the team in Arabic; do not assume the assigned problem.
+Use `CLAUDE.md` as the project instruction text. Also tell Claude: the official product UI language is Arabic; explain decisions to the team in Arabic; do not assume the assigned problem.
 
 ## Claude Code
 Open this folder in a terminal and start `claude` from the repository root. Claude Code should read `CLAUDE.md`.
