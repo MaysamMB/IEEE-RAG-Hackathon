@@ -623,6 +623,10 @@ def test_cli_rebuild_flag_requests_rebuild(monkeypatch):
     assert run_cli(monkeypatch, "--rebuild") == [("data/raw", True, [])]
 
 
+def test_cli_indexes_requested_folder(monkeypatch):
+    assert run_cli(monkeypatch, "--folder", "data/sample") == [("data/sample", False, [])]
+
+
 def test_cli_passes_requested_ocr_files(monkeypatch):
     calls = run_cli(monkeypatch, "--ocr-file", "a.pdf", "--ocr-file", "b/c.pdf")
 

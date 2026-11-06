@@ -2,7 +2,8 @@ import argparse
 from rag_hackathon.ingest import ingest
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Index the documents in data/raw.")
+    parser = argparse.ArgumentParser(description="Index a documents folder.")
+    parser.add_argument("--folder", default="data/raw", help="Documents folder to index.")
     parser.add_argument(
         "--rebuild",
         action="store_true",
@@ -13,7 +14,7 @@ if __name__ == "__main__":
         action="append",
         default=[],
         metavar="PATH",
-        help="Read this PDF, relative to data/raw, entirely with OCR. Can be repeated.",
+        help="Read this PDF, relative to --folder, entirely with OCR. Can be repeated.",
     )
     args = parser.parse_args()
-    ingest("data/raw", rebuild=args.rebuild, ocr_files=args.ocr_file)
+    ingest(args.folder, rebuild=args.rebuild, ocr_files=args.ocr_file)
