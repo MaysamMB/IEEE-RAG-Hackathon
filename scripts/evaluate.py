@@ -1,6 +1,7 @@
 """Run the evaluation and save the results.
 
-Retrieval checks are free and local. --answers calls the paid LLM once per question.
+Retrieval checks are free and local, and search each question as written.
+--answers calls the configured LLM twice per question: rewrite for search, then answer.
 """
 import argparse
 from datetime import datetime
@@ -55,7 +56,7 @@ def print_report(report: dict) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--questions", default="evaluation/questions.json")
-    parser.add_argument("--answers", action="store_true", help="Also generate and score answers (paid).")
+    parser.add_argument("--answers", action="store_true", help="Also generate and score answers (uses your LLM quota).")
     parser.add_argument("--rebuild", action="store_true", help="Rebuild the index from --folder first.")
     parser.add_argument("--folder", default="data/raw", help="Documents folder used with --rebuild.")
     parser.add_argument("--label", default="run", help="Short name saved in the result file name.")

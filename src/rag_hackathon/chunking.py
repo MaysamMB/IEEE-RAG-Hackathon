@@ -1,4 +1,7 @@
+import re
 from typing import Iterable
+
+ARTICLE_HEADING = re.compile(r"^المادة\s*\(?\s*(\d+)\s*\)?\s*:", re.MULTILINE)
 
 def first_whitespace(text: str, positions: Iterable[int]) -> int:
     return next((position for position in positions if text[position].isspace()), -1)
@@ -70,11 +73,24 @@ def make_chunk_id(metadata: dict) -> str:
     """Build a deterministic ID; source_path keeps same-named files in different folders apart."""
     return f"{metadata['source_path']}::p{metadata['page']}::c{metadata['chunk_index']}"
 
+def article_labels(chunk: str, current: str | None) -> list[str]:
+    """List the articles a chunk covers; text before its first heading continues current."""
+    found = ARTICLE_HEADING.findall(chunk)
+    continues = current is not None and not ARTICLE_HEADING.match(chunk)
+    return list(dict.fromkeys(([current] if continues else []) + found))
+
 def chunk_records(records: Iterable[dict], size: int, overlap: int) -> list[dict]:
     output: list[dict] = []
+    # An article can run across pages, but never across files.
+    current_article: dict[str, str | None] = {}
     for record in records:
+        path = record["metadata"]["source_path"]
         for index, chunk in enumerate(chunk_text(record["text"], size, overlap)):
             metadata = {**record["metadata"], "chunk_index": index}
             metadata["chunk_id"] = make_chunk_id(metadata)
+            labels = article_labels(chunk, current_article.get(path))
+            if labels:
+                metadata["article"] = "، ".join(labels)
+                current_article[path] = labels[-1]
             output.append({"text": chunk, "metadata": metadata})
     return output

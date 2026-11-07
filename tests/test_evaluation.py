@@ -288,8 +288,60 @@ def test_evaluate_without_answers_never_calls_the_llm(monkeypatch):
     assert "error" not in report["rows"][0]
 
 
+def test_role_based_history_becomes_turns():
+    item = question(conversation_history=[
+        {"role": "user", "content": "q1"},
+        {"role": "assistant", "content": "a1"},
+        {"role": "user", "content": "q2"},
+    ])
+
+    assert evaluation.conversation_turns(item) == [
+        {"question": "q1", "answer": "a1"},
+        {"question": "q2", "answer": ""},
+    ]
+
+
+def test_question_without_history_has_no_turns():
+    assert evaluation.conversation_turns(question()) == []
+
+
+def test_follow_up_is_skipped_without_answers_and_never_calls_the_llm(monkeypatch):
+    def forbidden(*_):
+        raise AssertionError("the LLM must not be called")
+
+    monkeypatch.setattr(evaluation, "retrieve", forbidden)
+    monkeypatch.setattr(evaluation, "answer_question", forbidden)
+
+    report = evaluate([question(history=[{"question": "q", "answer": "a"}])])
+
+    assert "skipped" in report["rows"][0]
+    assert report["summary"]["hit_at_k"] is None
+
+
+def test_follow_up_retrieval_is_scored_on_the_rewritten_question(monkeypatch):
+    searched = []
+
+    def fake_retrieve(text):
+        searched.append(text)
+        return [hit(3)]
+
+    history = [{"question": "q", "answer": "a"}]
+    monkeypatch.setattr(evaluation, "retrieve", fake_retrieve)
+    monkeypatch.setattr(evaluation, "answer_question", lambda text, turns: {
+        "answer": "250 دينار [S1]", "refused": False, "search_question": "full question",
+        "input_tokens": 1, "output_tokens": 1,
+        "sources": [{"id": "S1", "source": "guide.pdf", "page": 3}],
+    })
+
+    report = evaluate([question(history=history)], with_answers=True)
+
+    assert searched == ["full question"]
+    assert report["rows"][0]["search_question"] == "full question"
+    assert report["rows"][0]["hit"] is True
+
+
 def test_failed_question_is_recorded_and_the_run_continues(monkeypatch):
-    def fail(_):
+    def fail(*_):
         raise RuntimeError("network down")
 
     monkeypatch.setattr(evaluation, "retrieve", lambda q: [hit(3)])

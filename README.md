@@ -10,8 +10,10 @@ A domain-neutral Python starter workspace for a three-person team. The final pro
 - [x] Multilingual embedding adapter (`intfloat/multilingual-e5-small`, see `docs/EMBEDDING_COMPARISON.md`)
 - [x] Persistent ChromaDB vector store
 - [x] Retrieval with source metadata
-- [x] Claude answer generation with source IDs
-- [x] Minimal Arabic Gradio interface
+- [x] LLM answer generation with source IDs (any OpenAI-compatible service)
+- [x] Arabic Gradio chat with follow-up questions
+- [x] Refusal with a referral, and a separate out-of-scope reply
+- [x] Source list limited to the sources the answer cites
 - [x] Evaluation dataset template and evaluation script
 - [x] Arabic PDF repair and OCR for scanned pages
 - [x] Sample data and sample questions
@@ -29,7 +31,7 @@ The official product UI language is Arabic. Code, identifiers, and comments stay
 
 ```text
 Indexing:  PDF/TXT -> documents.py + pdf_text.py + ocr.py -> chunking.py -> embeddings.py -> vector_store.py (ChromaDB)
-Question:  question -> retrieval.py -> generation.py (Claude) -> pipeline.py -> app.py (Gradio)
+Question:  question -> retrieval.py -> generation.py (LLM) -> pipeline.py -> app.py (Gradio)
 Measuring: evaluation/questions.json -> scripts/evaluate.py -> evaluation/results/
 ```
 
@@ -37,13 +39,31 @@ Measuring: evaluation/questions.json -> scripts/evaluate.py -> evaluation/result
 
 Claude Code was used to write and review code, tests, and documentation in this repository. The prompts in `docs/prompts/` were written to support the business, marketing, and presentation work. The team reviewed the results and is responsible for explaining every part of the project.
 
+## Public data sources
+
+`data/source_versions.json` gives each source its version, used to prefer the newest source when sources conflict. Printed documents use their stated academic year. Live web pages show no issue date, so they use the download date. A source with no known date is left out, and a conflict involving it is shown rather than resolved.
+
+The demo indexes public documents from Palestine Polytechnic University. They stay out of version control. `python scripts/fetch_bylaws.py` recreates the bylaw text files in `data/raw/university/`.
+
+| File | Source |
+|---|---|
+| `ppu_bachelor_regulations.txt` | https://dar.ppu.edu/ar/bylaws/details/67 |
+| `ppu_diploma_regulations.txt` | https://dar.ppu.edu/ar/bylaws/details/28 |
+| `ppu_admission_instructions.txt` | https://dar.ppu.edu/ar/bylaws/details/32 |
+| `ppu_bridging_transfer.txt` | https://dar.ppu.edu/ar/bylaws/details/34 |
+| `ppu_about.txt` | https://www.ppu.edu/p/en/about |
+| `guide-2022-2023.pdf` | https://ppu.edu/ar/about/guide |
+| `bachelor-plans-2020-2021.pdf`, `diploma-plans-2020.pdf`, `factbook.pdf` | https://ppu.edu/sites/default/files/ |
+| `academic-programs.pdf` | https://admission.ppu.edu/UpLoads/AcademicPrograms.pdf |
+| `citce-regulations.pdf` | https://citce.ppu.edu/ar/documents |
+
 ## 1. Requirements
 
 - Python 3.11 or later (use the Python version available and supported by your libraries)
-- An Anthropic API key for the RAG application itself
+- A free API key from an OpenAI-compatible LLM service, or a local Ollama install
 - Internet access for installing packages and downloading the embedding model on first use
 
-**Billing note:** A paid Claude chat subscription and Claude API usage are separate products in most plans. Claude Code may be included with eligible paid plans, but calls made by this Python RAG application require API access/credits or another configured LLM provider. Check your Console billing before running API calls.
+**Billing note:** The team reports that the event does not allow paid model APIs, so this application uses a free tier or a local model. `.env.example` lists Groq, Gemini, OpenRouter, and Ollama settings. Free limits and model names change, so check your provider's console before running API calls.
 
 ## 2. Setup — Windows PowerShell
 
@@ -56,7 +76,7 @@ pip install -e .
 Copy-Item .env.example .env
 ```
 
-Open `.env` and set `ANTHROPIC_API_KEY` and a valid `ANTHROPIC_MODEL` available to your API account. Never commit `.env`.
+Open `.env` and set `LLM_API_KEY`, `LLM_BASE_URL`, and `LLM_MODEL`. To change provider, change these three values; no code changes are needed. Never commit `.env`.
 
 ## 3. Setup — macOS/Linux
 
@@ -156,7 +176,7 @@ python scripts/evaluate.py --questions evaluation/questions.json --answers
 python scripts/evaluate.py --questions evaluation/questions.sample.json --folder data/sample --rebuild
 ```
 
-The first command scores retrieval locally and costs nothing. `--answers` calls the paid model once per question and also scores facts, citations, and refusal. `--rebuild` re-indexes `--folder` first. Each run is saved under `evaluation/results/`. The script prints the largest in-scope and smallest out-of-scope distance; use them to calibrate `MAX_COSINE_DISTANCE`, and keep it blank while measuring. Include direct, paraphrase, dialect, multi-document, conflicting-source, and out-of-scope questions. A citation counts as correct only when the answer cites every expected source. Each result file records the index settings that produced it. Sample scores only prove that the pipeline runs, so never report them as project results. Fact matching is a simple text check. In `expected_answer_facts`, separate accepted spellings with `|`, for example `فصلين|فصلان`, because Arabic endings change with grammar. Read the saved answers to judge faithfulness. With `--answers`, the script reports the average tokens per answer. Add your model prices to `.env` to see the cost in USD.
+The first command scores retrieval locally and costs nothing. `--answers` calls the configured model twice per question (formal rewrite, then answer) and also scores facts, citations, and refusal. `--rebuild` re-indexes `--folder` first. Each run is saved under `evaluation/results/`. The script prints the largest in-scope and smallest out-of-scope distance; use them to calibrate `MAX_COSINE_DISTANCE`, and keep it blank while measuring. Include direct, paraphrase, dialect, multi-document, conflicting-source, and out-of-scope questions. A citation counts as correct only when the answer cites every expected source. Each result file records the index settings that produced it. Sample scores only prove that the pipeline runs, so never report them as project results. Fact matching is a simple text check. In `expected_answer_facts`, separate accepted spellings with `|`, for example `فصلين|فصلان`, because Arabic endings change with grammar. Read the saved answers to judge faithfulness. A follow-up question adds a `history` list of earlier `question` and `answer` turns; it is scored only with `--answers`, because rewriting it needs the model. With `--answers`, the script reports the average tokens per answer. Add your model prices to `.env` to see the cost in USD.
 
 Report measured results only. Suggested measures: Precision@k, Recall@k, faithfulness, citation accuracy, and refusal accuracy. A small, manually reviewed test set is better than fabricated metrics.
 
