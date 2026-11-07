@@ -77,6 +77,38 @@ def test_refusal_without_evidence_needs_no_key_or_model_call(monkeypatch):
     assert generation.generate_answer("question", []) == generation.GeneratedAnswer(generation.REFUSAL_MESSAGE)
 
 
+def test_exact_refusal_is_recognized():
+    assert generation.GeneratedAnswer(generation.REFUSAL_MESSAGE).refused
+    assert generation.GeneratedAnswer(f"**{generation.REFUSAL_MESSAGE}**").refused
+
+
+def test_answer_mentioning_missing_information_is_not_a_refusal():
+    answer = "الرسوم 480 ديناراً [S1]. لا تحتوي الوثائق على معلومات كافية عن رسوم أخرى."
+
+    assert not generation.GeneratedAnswer(answer).refused
+
+
+def test_refusal_sentence_after_a_real_answer_is_not_a_refusal():
+    answer = f"الرسوم 480 ديناراً [S1]. {generation.REFUSAL_MESSAGE}"
+
+    assert not generation.GeneratedAnswer(answer).refused
+
+
+def test_system_prompt_tells_the_model_the_exact_refusal():
+    assert generation.REFUSAL_MESSAGE in generation.SYSTEM_PROMPT
+
+
+def test_refusal_shows_no_sources(monkeypatch):
+    monkeypatch.setattr(pipeline, "retrieve", lambda question: [make_hit("guide.pdf")])
+    monkeypatch.setattr(pipeline, "generate_answer", lambda question, found: generation.GeneratedAnswer(generation.REFUSAL_MESSAGE, 50, 9))
+
+    result = pipeline.answer_question("question")
+
+    assert result["refused"] is True
+    assert result["sources"] == []
+    assert result["retrieved_count"] == 1
+
+
 def test_source_label_falls_back_for_older_metadata():
     assert generation.source_label({"source": "policy.pdf"}) == "policy.pdf"
     assert generation.source_label({}) == "Unknown"

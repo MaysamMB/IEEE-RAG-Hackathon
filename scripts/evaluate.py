@@ -16,7 +16,9 @@ def share(value: dict | None) -> str:
 
 def print_report(report: dict) -> None:
     summary = report["summary"]
-    print(f"\nQuestions: {summary['questions']} | top-k: {summary['top_k']}")
+    used = report["settings"]
+    print(f"\nIndex: {used['embedding_model']} | {used['indexed_chunks']} chunks | size {used['chunk_size']}, overlap {used['chunk_overlap']}")
+    print(f"Questions: {summary['questions']} | top-k: {summary['top_k']}")
     print(f"Hit@k:     {share(summary['hit_at_k'])}")
     print(f"Precision@k: {summary['precision_at_k']} | Recall@k: {summary['recall_at_k']} | MRR: {summary['mrr']}")
     print(f"All facts present: {share(summary['answers_with_all_facts'])}")
@@ -45,6 +47,8 @@ def print_report(report: dict) -> None:
             print(f"  {row['id']} [{row['category']}] {row['question']}")
             if row.get("missing_facts"):
                 print(f"    missing facts: {row['missing_facts']}")
+            if row.get("citation_correct") is False:
+                print(f"    cited: {row.get('cited_sources')} | invalid: {row.get('invalid_citations')}")
             if "error" in row:
                 print(f"    error: {row['error']}")
 

@@ -16,6 +16,12 @@ def test_e5_marks_questions_and_passages(monkeypatch):
     assert add_task_prefix(["نص"], is_query=False) == ["passage: نص"]
 
 
+def test_e5_is_detected_at_the_start_of_the_model_name(monkeypatch):
+    use_model(monkeypatch, "intfloat/e5-base-v2")
+
+    assert add_task_prefix(["نص"], is_query=True) == ["query: نص"]
+
+
 def test_other_models_get_plain_text(monkeypatch):
     use_model(monkeypatch, "sentence-transformers/paraphrase-multilingual-mpnet-base-v2")
 
