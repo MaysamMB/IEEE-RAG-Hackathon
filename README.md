@@ -53,9 +53,12 @@ The demo indexes public documents from Palestine Polytechnic University. They st
 | `ppu_bridging_transfer.txt` | https://dar.ppu.edu/ar/bylaws/details/34 |
 | `ppu_about.txt` | https://www.ppu.edu/p/en/about |
 | `guide-2022-2023.pdf` | https://ppu.edu/ar/about/guide |
-| `bachelor-plans-2020-2021.pdf`, `diploma-plans-2020.pdf`, `factbook.pdf` | https://ppu.edu/sites/default/files/ |
+| `bachelor-plans-2020-2021.pdf`, `factbook.pdf` | https://ppu.edu/sites/default/files/ |
+| `plan-*-2022.pdf` | https://citce.ppu.edu/ar/documents |
 | `academic-programs.pdf` | https://admission.ppu.edu/UpLoads/AcademicPrograms.pdf |
 | `citce-regulations.pdf` | https://citce.ppu.edu/ar/documents |
+
+`diploma-plans-2020.pdf` is left out of the index: most of its stored Arabic text is damaged, and it pushed good sources out of the results. OCR repairs it, but takes minutes per page.
 
 ## 1. Requirements
 

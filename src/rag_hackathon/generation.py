@@ -1,7 +1,7 @@
 from dataclasses import dataclass, replace
 import logging
 import re
-from openai import OpenAI
+from openai import OpenAI, RateLimitError
 from .config import settings
 
 logger = logging.getLogger(__name__)
@@ -29,6 +29,8 @@ Latin letter S and digits, even inside Arabic text, and with no spaces or other
 characters inside the brackets. Never write the identifier with an Arabic letter.
 Do not invent page numbers, sources, facts, or quotations.
 Values that apply to different programs or student groups are not a conflict.
+If the question names no program, answer for the bachelor's degree and do not
+use diploma rules.
 If sources give different values for the same thing, adopt the value from the
 source with the latest Version as the answer, then mention the older value and
 its Version in one short sentence, citing both sources. If the Versions are
@@ -43,8 +45,9 @@ like this: 45 × 18 = 810.
 REWRITE_PROMPT = """Rewrite the student's latest question as one complete, standalone
 question in simple Modern Standard Arabic, using the formal terms found in university
 regulations in place of dialect words. Use the conversation, if any, only to resolve
-what the question refers to. Do not answer it. Do not add facts or conditions the
-student did not state, and keep every number as it is.
+what the question refers to. Do not answer it. Keep every number as it is.
+If a question about study rules names no program, ask it about the bachelor's degree.
+Apart from that, do not add facts or conditions the student did not state.
 If it is not about university study, return it unchanged.
 Return only the question.
 """
@@ -80,7 +83,22 @@ def source_label(metadata: dict) -> str:
     """Prefer the relative path: file names alone are ambiguous across folders."""
     return metadata.get("source_path") or metadata.get("source") or "Unknown"
 
-def _chat(system: str, user: str, max_tokens: int) -> GeneratedAnswer:
+def _call_model(client: OpenAI, model: str, system: str, user: str, max_tokens: int):
+    # Reasoning settings suit the main model; other models may reject them.
+    effort = settings.llm_reasoning_effort if model == settings.llm_model else ""
+    if model == "qwen/qwen3.8-27b":
+        max_tokens = min(max_tokens, 700)
+    return client.chat.completions.create(
+        model=model,
+        max_tokens=max_tokens,
+        messages=[
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ],
+        **({"extra_body": {"reasoning_effort": effort}} if effort else {}),
+    )
+
+def _chat(system: str, user: str, max_tokens: int, model: str = "") -> GeneratedAnswer:
     # The base URL is required: left blank, the SDK would default to OpenAI's paid API.
     missing = [
         name for name, value in (
@@ -95,17 +113,19 @@ def _chat(system: str, user: str, max_tokens: int) -> GeneratedAnswer:
     client = OpenAI(
         api_key=settings.llm_api_key,
         base_url=settings.llm_base_url,
-        max_retries=5,
+        max_retries=3,
         timeout=60,
     )
-    response = client.chat.completions.create(
-        model=settings.llm_model,
-        max_tokens=max_tokens,
-        messages=[
-            {"role": "system", "content": system},
-            {"role": "user", "content": user},
-        ],
-    )
+    primary = model or settings.llm_model
+    try:
+        response = _call_model(client, primary, system, user, max_tokens)
+    except RateLimitError:
+        fallback = settings.llm_fallback_model
+        if not fallback or fallback == primary:
+            raise
+        # Quotas are per model, so a demo can continue when the main one runs out.
+        logger.warning("Quota reached for %s; using %s", primary, fallback)
+        response = _call_model(client, fallback, system, user, max_tokens)
     text = (response.choices[0].message.content or "").strip() if response.choices else ""
     # An empty reply must fail loudly: showing it would look like a blank answer.
     if not text:
@@ -121,7 +141,7 @@ def rewrite_question(question: str, history: list[dict]) -> GeneratedAnswer:
     )
     prompt = f"Conversation:\n{turns or '(none)'}\n\nLatest question: {question}"
     try:
-        return _chat(REWRITE_PROMPT, prompt, max_tokens=300)
+        return _chat(REWRITE_PROMPT, prompt, max_tokens=300, model=settings.llm_rewrite_model)
     except Exception:
         # A failed rewrite should not lose the answer: fall back to the question as asked.
         logger.exception("Question rewrite failed")
@@ -144,5 +164,6 @@ def generate_answer(question: str, hits: list[dict]) -> GeneratedAnswer:
         "Retrieved context:\n\n" + "\n\n---\n\n".join(context_parts)
         + f"\n\nUser question: {question}\n\nAnswer with source IDs."
     )
-    answer = _chat(SYSTEM_PROMPT, prompt, max_tokens=700)
+    # Reasoning models spend part of this limit before writing, so 700 could leave nothing.
+    answer = _chat(SYSTEM_PROMPT, prompt, max_tokens=1500)
     return replace(answer, text=normalize_citations(answer.text))

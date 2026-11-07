@@ -9,6 +9,9 @@ from types import SimpleNamespace
 import gradio as gr
 import pytest
 
+import httpx
+from openai import RateLimitError
+
 from rag_hackathon import config, generation, pipeline
 from rag_hackathon.vector_store import EmbeddingModelMismatchError, InterruptedRebuildError
 
@@ -45,7 +48,8 @@ def use_fake_client(monkeypatch, sent, reply="answer"):
 
     monkeypatch.setattr(generation, "OpenAI", FakeClient)
     monkeypatch.setattr(generation, "settings", replace(
-        config.settings, llm_api_key="test", llm_base_url="https://llm.test/v1", llm_model="test"
+        config.settings, llm_api_key="test", llm_base_url="https://llm.test/v1", llm_model="test",
+        llm_rewrite_model="", llm_fallback_model="", llm_reasoning_effort="",
     ))
 
 
@@ -80,6 +84,88 @@ def test_prompt_cites_relative_paths(monkeypatch):
     assert sent["messages"][0] == {"role": "system", "content": generation.SYSTEM_PROMPT}
     assert "Source: 2024/policy.pdf; Page: 3" in sent["messages"][1]["content"]
     assert answer == generation.GeneratedAnswer("answer", 120, 30)
+
+
+def quota_client(monkeypatch, exhausted, **settings):
+    """Answer like the provider, returning 429 for the models named in exhausted."""
+    calls = []
+
+    class FakeClient:
+        def __init__(self, **kwargs):
+            self.chat = SimpleNamespace(completions=SimpleNamespace(create=self.create))
+
+        def create(self, **kwargs):
+            calls.append(kwargs)
+            if kwargs["model"] in exhausted:
+                response = httpx.Response(429, request=httpx.Request("POST", "https://llm.test"))
+                raise RateLimitError("quota", response=response, body=None)
+            return SimpleNamespace(
+                choices=[SimpleNamespace(message=SimpleNamespace(content="answer"))],
+                usage=SimpleNamespace(prompt_tokens=1, completion_tokens=1),
+            )
+
+    monkeypatch.setattr(generation, "OpenAI", FakeClient)
+    monkeypatch.setattr(generation, "settings", replace(config.settings, **{
+        "llm_api_key": "test", "llm_base_url": "https://llm.test/v1", "llm_model": "main",
+        "llm_rewrite_model": "", "llm_fallback_model": "", "llm_reasoning_effort": "", **settings,
+    }))
+    return calls
+
+
+def test_rewrite_uses_the_light_model(monkeypatch):
+    calls = quota_client(monkeypatch, (), llm_rewrite_model="light")
+
+    generation.rewrite_question("question", [])
+
+    assert calls[0]["model"] == "light"
+
+
+def test_rewrite_uses_the_main_model_when_no_light_one_is_set(monkeypatch):
+    calls = quota_client(monkeypatch, ())
+
+    generation.rewrite_question("question", [])
+
+    assert calls[0]["model"] == "main"
+
+
+def test_answer_moves_to_the_fallback_when_quota_runs_out(monkeypatch):
+    calls = quota_client(monkeypatch, ("main",), llm_fallback_model="backup")
+
+    answer = generation.generate_answer("question", [make_hit("guide.pdf")])
+
+    assert answer.text == "answer"
+    assert [call["model"] for call in calls] == ["main", "backup"]
+
+
+def test_quota_error_is_raised_without_a_fallback(monkeypatch):
+    quota_client(monkeypatch, ("main",))
+
+    with pytest.raises(RateLimitError):
+        generation.generate_answer("question", [make_hit("guide.pdf")])
+
+
+def test_reasoning_effort_goes_only_to_the_main_model(monkeypatch):
+    calls = quota_client(
+        monkeypatch, ("main",), llm_fallback_model="backup", llm_reasoning_effort="low"
+    )
+
+    generation.generate_answer("question", [make_hit("guide.pdf")])
+
+    assert calls[0]["extra_body"] == {"reasoning_effort": "low"}
+    assert "extra_body" not in calls[1]
+
+
+def test_answer_limit_leaves_room_after_reasoning(monkeypatch):
+    calls = quota_client(monkeypatch, ())
+
+    generation.generate_answer("question", [make_hit("guide.pdf")])
+
+    assert calls[0]["max_tokens"] >= 1500
+
+
+def test_bachelor_is_the_default_program():
+    assert "bachelor's degree" in generation.SYSTEM_PROMPT
+    assert "bachelor's degree" in generation.REWRITE_PROMPT
 
 
 @pytest.mark.parametrize("reply", [None, "", "  \n"])

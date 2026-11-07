@@ -700,5 +700,61 @@
     "expected_answer_facts": [],
     "expected_sources": [],
     "should_refuse": true
+  },
+  {
+    "id": "P25",
+    "category": "plan_table",
+    "question": "ما المتطلب السابق لمساق تركيب البيانات في خطة علم الحاسوب؟",
+    "expected_answer_facts": [
+      "برمجة الحاسوب|5059"
+    ],
+    "expected_sources": [
+      {
+        "source": "plan-computer-science-2022.pdf"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "P26",
+    "category": "plan_table",
+    "question": "ما المتطلب السابق لمساق الرياضيات المتقطعة في خطة علم الحاسوب؟",
+    "expected_answer_facts": [
+      "تفاضل وتكامل 1|4004"
+    ],
+    "expected_sources": [
+      {
+        "source": "plan-computer-science-2022.pdf"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "P27",
+    "category": "plan_table",
+    "question": "كم ساعة معتمدة مطلوبة لمتطلبات الدائرة في تخصص علم الحاسوب حسب خطة 2022؟",
+    "expected_answer_facts": [
+      "18|ثماني عشرة"
+    ],
+    "expected_sources": [
+      {
+        "source": "plan-computer-science-2022.pdf"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "P28",
+    "category": "plan_table",
+    "question": "كم ساعة متطلبات الجامعة الإجبارية بخطة علم الحاسوب 2022؟",
+    "expected_answer_facts": [
+      "23"
+    ],
+    "expected_sources": [
+      {
+        "source": "plan-computer-science-2022.pdf"
+      }
+    ],
+    "should_refuse": false
   }
 ]
