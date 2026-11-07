@@ -1,12 +1,12 @@
 """Evaluation scoring tests; retrieval and the LLM are faked."""
 import json
+from types import SimpleNamespace
 
 import pytest
 
 from rag_hackathon import evaluation
 from rag_hackathon.evaluation import (
     evaluate,
-    is_refusal,
     load_questions,
     normalize_text,
     score_answer,
@@ -34,6 +34,15 @@ def hit(page, distance=0.2):
         "metadata": {"source": "guide.pdf", "source_path": "docs/guide.pdf", "page": page},
         "distance": distance,
     }
+
+
+@pytest.fixture(autouse=True)
+def fake_index(monkeypatch):
+    collection = SimpleNamespace(
+        metadata={"embedding_model": "mock", "chunk_size": 1000, "chunk_overlap": 150, "documents_root": "/docs"},
+        count=lambda: 22,
+    )
+    monkeypatch.setattr(evaluation, "get_collection", lambda: collection)
 
 
 def write_questions(tmp_path, items):
@@ -119,28 +128,12 @@ def test_out_of_scope_question_has_no_hit_score():
     assert score_retrieval(question(expected_sources=[], should_refuse=True), [hit(1, 0.9)]) == {"top_distance": 0.9}
 
 
-def test_no_sources_counts_as_refusal():
-    assert is_refusal("أي نص", [])
-
-
-def test_refusal_wording_is_detected_with_letter_variants():
-    answer = "لا تحتوي الوثائق المتاحة على معلومات كافية للإجابة."
-
-    assert is_refusal(answer, [{"source": "guide.pdf", "page": 1}])
-
-
-def test_caveat_after_a_real_answer_is_not_a_refusal():
-    answer = "الرسوم 480 ديناراً حسب المادة الخامسة من الدليل، وتدفع قبل نهاية الأسبوع الثاني من الفصل الدراسي كما ورد في المصدر [S1]. " + "لا تحتوي الوثائق على رسوم أخرى."
-
-    assert not is_refusal(answer, [{"source": "guide.pdf", "page": 1}])
-
-
-def test_normal_answer_is_not_a_refusal():
-    assert not is_refusal("الرسوم 250 دينار [S1]", [{"source": "guide.pdf", "page": 1}])
+def cited(*items):
+    return [{"id": f"S{number}", "source": name, "page": page} for number, name, page in items]
 
 
 def test_correct_answer_scores():
-    scores = score_answer(question(), "تبلغ الرسوم 250 دينار [S1]", [{"source": "docs/guide.pdf", "page": 3}])
+    scores = score_answer(question(), "تبلغ الرسوم 250 دينار [S1]", cited((1, "docs/guide.pdf", 3)), False)
 
     assert scores["facts_correct"] is True
     assert scores["citation_correct"] is True
@@ -150,35 +143,89 @@ def test_correct_answer_scores():
 def test_fact_accepts_alternative_arabic_endings():
     item = question(expected_answer_facts=["فصلين|فصلان"])
 
-    scores = score_answer(item, "الحد هو فصلان دراسيان", [{"source": "guide.pdf", "page": 3}])
+    scores = score_answer(item, "الحد هو فصلان دراسيان [S1]", cited((1, "guide.pdf", 3)), False)
 
     assert scores["facts_correct"] is True
 
 
-def test_missing_fact_and_wrong_page_are_reported():
-    scores = score_answer(question(), "الرسوم مرتفعة [S1]", [{"source": "guide.pdf", "page": 9}])
+def test_missing_fact_is_reported():
+    scores = score_answer(question(), "الرسوم مرتفعة [S1]", cited((1, "guide.pdf", 3)), False)
 
     assert scores["missing_facts"] == ["250 دينار"]
+
+
+def test_right_source_retrieved_but_not_cited_is_wrong():
+    sources = cited((1, "other.pdf", 1), (2, "guide.pdf", 3))
+
+    scores = score_answer(question(), "250 دينار [S1]", sources, False)
+
+    assert scores["citation_correct"] is False
+    assert scores["cited_sources"] == ["other.pdf p1"]
+
+
+def test_cited_right_source_among_retrieved_ones_is_correct():
+    sources = cited((1, "other.pdf", 1), (2, "guide.pdf", 3))
+
+    assert score_answer(question(), "250 دينار [S2]", sources, False)["citation_correct"] is True
+
+
+def test_answer_without_citation_is_wrong():
+    scores = score_answer(question(), "250 دينار", cited((1, "guide.pdf", 3)), False)
+
+    assert scores["citation_correct"] is False
+
+
+def test_answer_needs_a_citation_even_without_expected_sources():
+    scores = score_answer(question(expected_sources=[]), "250 دينار", cited((1, "guide.pdf", 3)), False)
+
+    assert scores["citation_correct"] is False
+
+
+def test_citing_a_source_that_does_not_exist_is_wrong():
+    scores = score_answer(question(), "250 دينار [S1] [S7]", cited((1, "guide.pdf", 3)), False)
+
+    assert scores["invalid_citations"] == ["S7"]
+    assert scores["citation_correct"] is False
+
+
+def test_every_expected_source_must_be_cited():
+    item = question(expected_sources=[{"source": "a.txt", "page": 1}, {"source": "b.txt", "page": 1}])
+    sources = cited((1, "a.txt", 1), (2, "b.txt", 1))
+
+    assert score_answer(item, "250 دينار [S1]", sources, False)["citation_correct"] is False
+    assert score_answer(item, "250 دينار [S1][S2]", sources, False)["citation_correct"] is True
+
+
+def test_wrong_page_is_a_wrong_citation():
+    scores = score_answer(question(), "250 دينار [S1]", cited((1, "guide.pdf", 9)), False)
+
     assert scores["citation_correct"] is False
 
 
 def test_similar_file_name_is_not_a_correct_citation():
-    scores = score_answer(question(), "250 دينار", [{"source": "my_guide.pdf", "page": 3}])
+    scores = score_answer(question(), "250 دينار [S1]", cited((1, "my_guide.pdf", 3)), False)
 
     assert scores["citation_correct"] is False
 
 
 def test_unwanted_refusal_is_wrong():
-    scores = score_answer(question(), "لا تحتوي الوثائق على معلومات كافية", [{"source": "guide.pdf", "page": 3}])
+    scores = score_answer(question(), "لا تحتوي", [], True)
 
     assert scores["refusal_correct"] is False
+    assert scores["citation_correct"] is False
 
 
 def test_answering_an_out_of_scope_question_is_wrong():
-    scores = score_answer(question(should_refuse=True, expected_sources=[]), "فاز الفريق", [{"source": "guide.pdf", "page": 1}])
+    scores = score_answer(question(should_refuse=True, expected_sources=[]), "فاز الفريق", cited((1, "guide.pdf", 1)), False)
 
     assert scores["refusal_correct"] is False
     assert "facts_correct" not in scores
+
+
+def test_correct_refusal_scores():
+    scores = score_answer(question(should_refuse=True, expected_sources=[]), "لا تحتوي", [], True)
+
+    assert scores["refusal_correct"] is True
 
 
 def test_summary_separates_in_scope_and_out_of_scope_distances():
@@ -252,3 +299,21 @@ def test_failed_question_is_recorded_and_the_run_continues(monkeypatch):
 
     assert report["summary"]["errors"] == 2
     assert "network down" in report["rows"][1]["error"]
+
+
+def test_report_records_what_produced_the_result(monkeypatch):
+    monkeypatch.setattr(evaluation, "retrieve", lambda q: [hit(3)])
+
+    used = evaluate([question()])["settings"]
+
+    assert used["embedding_model"] == "mock"
+    assert (used["chunk_size"], used["chunk_overlap"]) == (1000, 150)
+    assert used["documents_root"] == "/docs"
+    assert used["indexed_chunks"] == 22
+    assert used["top_k"] == evaluation.settings.top_k
+
+
+def test_report_works_without_an_index(monkeypatch):
+    monkeypatch.setattr(evaluation, "get_collection", lambda: None)
+
+    assert evaluation.run_settings()["indexed_chunks"] == 0

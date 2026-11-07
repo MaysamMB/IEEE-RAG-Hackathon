@@ -8,12 +8,12 @@ import unicodedata
 from .config import settings
 from .pipeline import answer_question
 from .retrieval import retrieve
+from .vector_store import get_collection
 
 PLACEHOLDER = re.compile(r"REPLACE_|REWORD_|ASK_FOR_")
 MINIMUM_QUESTIONS = 10
-REFUSAL_MARKERS = ("معلومات كافيه", "لا تحتوي", "not enough information")
 LETTER_VARIANTS = str.maketrans({"أ": "ا", "إ": "ا", "آ": "ا", "ة": "ه", "ى": "ي"})
-REFUSAL_OPENING_LENGTH = 120
+CITED_ID = re.compile(r"\bS(\d+)\b")
 ARABIC_MARKS = re.compile("[ً-ْـ]")
 
 def normalize_text(text: str) -> str:
@@ -57,19 +57,30 @@ def score_retrieval(question: dict, hits: list[dict]) -> dict:
         "recall": len(found) / len(expected),
     }
 
-def is_refusal(answer: str, sources: list[dict]) -> bool:
-    if not sources:
-        return True
-    # A real answer may add a caveat later, so only its opening decides.
-    opening = normalize_text(answer)[:REFUSAL_OPENING_LENGTH]
-    return any(normalize_text(marker) in opening for marker in REFUSAL_MARKERS)
-
 def fact_found(fact: str, normalized_answer: str) -> bool:
     """A fact may list spellings with "|", because Arabic endings change with grammar."""
     return any(normalize_text(option) in normalized_answer for option in fact.split("|"))
 
-def score_answer(question: dict, answer: str, sources: list[dict]) -> dict:
-    refused = is_refusal(answer, sources)
+def _is_same_citation(source: dict, expected: dict) -> bool:
+    same_file = source["source"] == expected["source"] or source["source"].endswith("/" + expected["source"])
+    return same_file and source["page"] == expected.get("page", source["page"])
+
+def citation_scores(question: dict, answer: str, sources: list[dict]) -> dict:
+    """Judge the sources the answer actually cites, not everything retrieved."""
+    cited_ids = {f"S{number}" for number in CITED_ID.findall(answer)}
+    cited = [source for source in sources if source["id"] in cited_ids]
+    invalid = sorted(cited_ids - {source["id"] for source in sources})
+    covered = all(
+        any(_is_same_citation(source, expected) for source in cited)
+        for expected in question["expected_sources"]
+    )
+    return {
+        "cited_sources": [f"{source['source']} p{source['page']}" for source in cited],
+        "invalid_citations": invalid,
+        "citation_correct": bool(cited) and covered and not invalid,
+    }
+
+def score_answer(question: dict, answer: str, sources: list[dict], refused: bool) -> dict:
     scores = {"refused": refused, "refusal_correct": refused == question["should_refuse"]}
     if question["should_refuse"]:
         return scores
@@ -77,12 +88,7 @@ def score_answer(question: dict, answer: str, sources: list[dict]) -> dict:
     facts = question["expected_answer_facts"]
     scores["missing_facts"] = [fact for fact in facts if not fact_found(fact, text)]
     scores["facts_correct"] = not scores["missing_facts"]
-    scores["citation_correct"] = any(
-        s["source"] == e["source"] or s["source"].endswith("/" + e["source"])
-        for s in sources
-        for e in question["expected_sources"]
-        if e.get("page", s["page"]) == s["page"]
-    )
+    scores.update(citation_scores(question, answer, sources))
     return scores
 
 def usage_summary(rows: list[dict]) -> dict | None:
@@ -138,6 +144,21 @@ def summarize(rows: list[dict]) -> dict:
         }
     return summary
 
+def run_settings() -> dict:
+    """Record what produced a result, read from the index itself where possible."""
+    collection = get_collection()
+    metadata = collection.metadata if collection is not None else {}
+    return {
+        "embedding_model": metadata.get("embedding_model"),
+        "chunk_size": metadata.get("chunk_size"),
+        "chunk_overlap": metadata.get("chunk_overlap"),
+        "documents_root": metadata.get("documents_root"),
+        "indexed_chunks": collection.count() if collection is not None else 0,
+        "top_k": settings.top_k,
+        "max_cosine_distance": settings.max_cosine_distance,
+        "generation_model": settings.anthropic_model,
+    }
+
 def evaluate(questions: list[dict], *, with_answers: bool = False) -> dict:
     """Score every question. with_answers calls the paid LLM once per question."""
     rows = []
@@ -155,8 +176,8 @@ def evaluate(questions: list[dict], *, with_answers: bool = False) -> dict:
                 row["answer"] = result["answer"]
                 row["input_tokens"] = result["input_tokens"]
                 row["output_tokens"] = result["output_tokens"]
-                row.update(score_answer(question, result["answer"], result["sources"]))
+                row.update(score_answer(question, result["answer"], result["sources"], result["refused"]))
             except Exception as exc:
                 row["error"] = f"{type(exc).__name__}: {exc}"
         rows.append(row)
-    return {"summary": summarize(rows), "rows": rows}
+    return {"settings": run_settings(), "summary": summarize(rows), "rows": rows}

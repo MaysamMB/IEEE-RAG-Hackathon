@@ -2,22 +2,26 @@ from dataclasses import dataclass
 from anthropic import Anthropic
 from .config import settings
 
-SYSTEM_PROMPT = """You are an evidence-grounded assistant.
+REFUSAL_MESSAGE = "لا تحتوي المستندات المتاحة على معلومات كافية للإجابة عن هذا السؤال."
+
+SYSTEM_PROMPT = f"""You are an evidence-grounded assistant.
 Answer the user's question using only the supplied retrieved context.
 Do not use outside knowledge to fill gaps. If the context is insufficient,
-state clearly that the available documents do not contain enough information.
+reply with exactly this sentence and nothing else: {REFUSAL_MESSAGE}
 Cite supporting source identifiers exactly as [S1], [S2], etc.
 Do not invent page numbers, sources, facts, or quotations. If sources conflict,
 explain the conflict and cite each relevant source. Answer in the user's language.
 """
-
-REFUSAL_MESSAGE = "لا تحتوي المستندات المتاحة على معلومات كافية للإجابة عن هذا السؤال."
 
 @dataclass(frozen=True)
 class GeneratedAnswer:
     text: str
     input_tokens: int = 0
     output_tokens: int = 0
+
+    @property
+    def refused(self) -> bool:
+        return self.text.strip(" *\n").startswith(REFUSAL_MESSAGE)
 
 def source_label(metadata: dict) -> str:
     """Prefer the relative path: file names alone are ambiguous across folders."""

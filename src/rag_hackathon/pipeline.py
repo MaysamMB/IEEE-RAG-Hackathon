@@ -5,7 +5,8 @@ def answer_question(question: str) -> dict:
     hits = retrieve(question)
     generated = generate_answer(question, hits)
     sources = []
-    for index, hit in enumerate(hits, start=1):
+    # A refusal rests on no evidence, so it must not display any source.
+    for index, hit in enumerate([] if generated.refused else hits, start=1):
         metadata = hit["metadata"]
         sources.append({
             "id": f"S{index}",
@@ -15,6 +16,7 @@ def answer_question(question: str) -> dict:
         })
     return {
         "answer": generated.text,
+        "refused": generated.refused,
         "sources": sources,
         "retrieved_count": len(hits),
         "input_tokens": generated.input_tokens,

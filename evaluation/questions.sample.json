@@ -1,12 +1,14 @@
 [
-  {"id": "S01", "category": "direct_fact", "question": "ما الحد الأقصى للساعات المعتمدة في الفصل؟", "expected_answer_facts": ["ثماني عشرة"], "expected_sources": [{"source": "student_guide.txt", "page": 1}], "should_refuse": false},
-  {"id": "S02", "category": "direct_fact", "question": "كم رسوم الساعة المعتمدة الواحدة؟", "expected_answer_facts": ["أربعين"], "expected_sources": [{"source": "student_guide.txt", "page": 1}], "should_refuse": false},
-  {"id": "S03", "category": "direct_fact", "question": "كم ساعة معتمدة يتطلب التخرج؟", "expected_answer_facts": ["مئة وثلاثين"], "expected_sources": [{"source": "student_guide.txt", "page": 1}], "should_refuse": false},
-  {"id": "S04", "category": "paraphrase", "question": "شو آخر موعد عشان أعترض على علامتي؟", "expected_answer_facts": ["خمسة عشر يوماً|15 يوم"], "expected_sources": [{"source": "student_guide.txt", "page": 1}], "should_refuse": false},
-  {"id": "S05", "category": "paraphrase", "question": "إلى متى يمكنني إيقاف دراستي مؤقتاً؟", "expected_answer_facts": ["فصلين|فصلان"], "expected_sources": [{"source": "student_guide.txt", "page": 1}], "should_refuse": false},
-  {"id": "S06", "category": "paraphrase", "question": "متى أُمنع من تقديم الامتحان الأخير؟", "expected_answer_facts": ["خمسة عشر بالمئة"], "expected_sources": [{"source": "student_guide.txt", "page": 1}], "should_refuse": false},
-  {"id": "S07", "category": "paraphrase", "question": "كم كتاباً أقدر أستعير من المكتبة؟", "expected_answer_facts": ["ثلاثة كتب"], "expected_sources": [{"source": "student_guide.txt", "page": 1}], "should_refuse": false},
-  {"id": "S08", "category": "multi_hop", "question": "كم تبلغ رسوم الفصل إذا سجلت الحد الأدنى من الساعات؟", "expected_answer_facts": ["480"], "expected_sources": [{"source": "student_guide.txt", "page": 1}], "should_refuse": false},
-  {"id": "S09", "category": "out_of_scope", "question": "من فاز بكأس العالم عام 2022؟", "expected_answer_facts": [], "expected_sources": [], "should_refuse": true},
-  {"id": "S10", "category": "out_of_scope", "question": "ما وصفة تحضير المقلوبة؟", "expected_answer_facts": [], "expected_sources": [], "should_refuse": true}
+  {"id": "S01", "category": "direct_fact", "question": "ما الحد الأقصى للساعات المعتمدة في الفصل؟", "expected_answer_facts": ["ثماني عشرة|18"], "expected_sources": [{"source": "registration.txt", "page": 1}], "should_refuse": false},
+  {"id": "S02", "category": "direct_fact", "question": "كم ساعة معتمدة يتطلب التخرج؟", "expected_answer_facts": ["مئة وثلاثين|130"], "expected_sources": [{"source": "academic_standing.txt", "page": 1}], "should_refuse": false},
+  {"id": "S03", "category": "direct_fact", "question": "متى تغلق المكتبة؟", "expected_answer_facts": ["السادسة|6"], "expected_sources": [{"source": "library.txt", "page": 1}], "should_refuse": false},
+  {"id": "S04", "category": "dialect", "question": "شو آخر موعد عشان أعترض على علامتي؟", "expected_answer_facts": ["خمسة عشر يوماً|15 يوم"], "expected_sources": [{"source": "attendance_and_exams.txt", "page": 1}], "should_refuse": false},
+  {"id": "S05", "category": "dialect", "question": "كم كتاب بقدر أستعير من المكتبة؟", "expected_answer_facts": ["ثلاثة كتب|3 كتب"], "expected_sources": [{"source": "library.txt", "page": 1}], "should_refuse": false},
+  {"id": "S06", "category": "paraphrase", "question": "إلى متى يمكنني إيقاف دراستي مؤقتاً؟", "expected_answer_facts": ["فصلين|فصلان"], "expected_sources": [{"source": "registration.txt", "page": 1}], "should_refuse": false},
+  {"id": "S07", "category": "paraphrase", "question": "متى أُمنع من تقديم الامتحان الأخير؟", "expected_answer_facts": ["خمسة عشر بالمئة|15%"], "expected_sources": [{"source": "attendance_and_exams.txt", "page": 1}], "should_refuse": false},
+  {"id": "S08", "category": "conflicting_sources", "question": "كم رسوم الساعة المعتمدة حالياً؟", "expected_answer_facts": ["خمسة وأربعين|خمسة وأربعون|45"], "expected_sources": [{"source": "fees_2024.txt", "page": 1}], "should_refuse": false},
+  {"id": "S09", "category": "multi_document", "question": "كم تبلغ رسوم الفصل حالياً إذا سجلت الحد الأدنى من الساعات؟", "expected_answer_facts": ["540"], "expected_sources": [{"source": "registration.txt", "page": 1}, {"source": "fees_2024.txt", "page": 1}], "should_refuse": false},
+  {"id": "S10", "category": "multi_document", "question": "كم أدفع حالياً إذا سجلت الحد الأقصى من الساعات؟", "expected_answer_facts": ["810"], "expected_sources": [{"source": "registration.txt", "page": 1}, {"source": "fees_2024.txt", "page": 1}], "should_refuse": false},
+  {"id": "S11", "category": "out_of_scope", "question": "من فاز بكأس العالم عام 2022؟", "expected_answer_facts": [], "expected_sources": [], "should_refuse": true},
+  {"id": "S12", "category": "out_of_scope", "question": "ما وصفة تحضير المقلوبة؟", "expected_answer_facts": [], "expected_sources": [], "should_refuse": true}
 ]

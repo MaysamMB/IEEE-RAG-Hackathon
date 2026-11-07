@@ -1,4 +1,5 @@
 from functools import lru_cache
+import re
 from sentence_transformers import SentenceTransformer
 from .config import settings
 
@@ -9,7 +10,7 @@ def get_embedder() -> SentenceTransformer:
 
 def add_task_prefix(texts: list[str], *, is_query: bool) -> list[str]:
     """E5 models need "query: " on questions and "passage: " on documents."""
-    if "-e5-" not in settings.embedding_model:
+    if not re.search(r"(?:^|[/-])e5-", settings.embedding_model):
         return texts
     prefix = "query: " if is_query else "passage: "
     return [prefix + text for text in texts]
