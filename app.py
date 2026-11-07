@@ -3,7 +3,26 @@ import gradio as gr
 from rag_hackathon.generation import MAX_HISTORY_TURNS
 from rag_hackathon.pipeline import answer_question
 from rag_hackathon.vector_store import EmbeddingModelMismatchError, InterruptedRebuildError
+import json
+import time
+from pathlib import Path
+from datetime import datetime
 
+RESULTS_FILE = Path("evaluation/results/live_tests.jsonl")
+RESULTS_FILE.parent.mkdir(parents=True, exist_ok=True)
+
+def save_test(question, answer, response_time, status):
+    record = {
+        "timestamp": datetime.now().isoformat(),
+        "question": question,
+        "answer": answer,
+        "response_time_seconds": round(response_time, 3),
+        "status": status,
+        "correctness": None
+    }
+
+    with RESULTS_FILE.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(record, ensure_ascii=False) + "\n")
 logger = logging.getLogger(__name__)
 
 INDEX_NOT_READY_MESSAGE = "فهرس المستندات غير جاهز ويحتاج إلى إعادة بناء من مسؤول النظام."
@@ -51,16 +70,34 @@ def process(question: str, turns: list[dict]) -> tuple[str, dict | None]:
 def ask(question: str, turns: list[dict] | None = None) -> str:
     return process(question, turns or [])[0]
 
-def respond(question: str, chat: list[dict], turns: list[dict]) -> tuple[str, list[dict], list[dict]]:
-    """Each browser session keeps its own turns; nothing is stored on the server."""
+def respond(question, chat, turns):
     if not question or not question.strip():
         return "", chat, turns
+
+    start = time.perf_counter()
+
     shown, turn = process(question, turns)
-    chat = chat + [{"role": "user", "content": question}, {"role": "assistant", "content": shown}]
+
+    elapsed = time.perf_counter() - start
+
+    status = "success" if turn is not None else "failed"
+
+    save_test(
+        question=question,
+        answer=shown,
+        response_time=elapsed,
+        status=status
+    )
+
+    chat = chat + [
+        {"role": "user", "content": question},
+        {"role": "assistant", "content": shown}
+    ]
+
     if turn:
         turns = (turns + [turn])[-MAX_HISTORY_TURNS:]
-    return "", chat, turns
 
+    return "", chat, turns
 with gr.Blocks(title="المرشد الأكاديمي الذكي") as demo:
     gr.Markdown("# المرشد الأكاديمي الذكي\nاسأل عن الأنظمة والخطط الدراسية في الجامعة.", rtl=True)
     chat = gr.Chatbot(label="المحادثة", rtl=True)
