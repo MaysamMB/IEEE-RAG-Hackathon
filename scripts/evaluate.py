@@ -1,6 +1,7 @@
 """Run the evaluation and save the results.
 
-Retrieval checks are free and local. --answers calls the configured LLM once per question, twice for follow-ups.
+Retrieval checks are free and local, and search each question as written.
+--answers calls the configured LLM twice per question: rewrite for search, then answer.
 """
 import argparse
 from datetime import datetime

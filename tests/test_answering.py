@@ -15,6 +15,12 @@ from rag_hackathon.vector_store import EmbeddingModelMismatchError, InterruptedR
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
+@pytest.fixture(autouse=True)
+def no_real_rewrite(monkeypatch):
+    """The pipeline rewrites every question; tests must never reach the real service."""
+    monkeypatch.setattr(pipeline, "rewrite_question", lambda question, history: generation.GeneratedAnswer(question))
+
+
 def make_hit(path, name="policy.pdf", page=3):
     return {
         "text": "evidence",
@@ -231,14 +237,49 @@ def test_citation_outside_the_retrieved_range_is_not_listed(monkeypatch):
 TURN = {"question": "first question", "answer": "first answer"}
 
 
-def test_first_question_makes_no_rewrite_call(monkeypatch):
-    def forbidden(*_):
-        raise AssertionError("nothing to rewrite")
+def test_first_question_is_rewritten_for_search(monkeypatch):
+    seen = {}
 
-    monkeypatch.setattr(pipeline, "rewrite_question", forbidden)
+    def fake_rewrite(question, history):
+        seen["call"] = (question, history)
+        return generation.GeneratedAnswer("formal question", 3, 2)
+
+    monkeypatch.setattr(pipeline, "rewrite_question", fake_rewrite)
     result = answer_with(monkeypatch, "answer [S1]", ["a.pdf"])
 
-    assert result["search_question"] == "question"
+    assert seen["call"] == ("question", [])
+    assert result["search_question"] == "formal question"
+
+
+def test_rewrite_without_history_marks_the_conversation_empty(monkeypatch):
+    sent = {}
+    use_fake_client(monkeypatch, sent, "formal question")
+
+    rewritten = generation.rewrite_question("شو بصير؟", [])
+
+    assert rewritten.text == "formal question"
+    assert "(none)" in sent["messages"][1]["content"]
+    assert "شو بصير؟" in sent["messages"][1]["content"]
+
+
+def test_source_version_reaches_the_model(monkeypatch):
+    sent = {}
+    use_fake_client(monkeypatch, sent, "answer [S1]")
+    dated = make_hit("a.pdf")
+    dated["metadata"]["version"] = "2022/2023"
+
+    generation.generate_answer("question", [dated, make_hit("b.pdf")])
+
+    context = sent["messages"][1]["content"]
+    assert "Page: 3; Version: 2022/2023" in context
+    assert context.count("Version:") == 1
+
+
+def test_prompt_prefers_the_newest_source():
+    prompt = generation.SYSTEM_PROMPT
+
+    assert "latest Version" in prompt
+    assert "no Version" in prompt
 
 
 def test_follow_up_is_searched_and_answered_as_the_rewritten_question(monkeypatch):

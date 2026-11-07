@@ -1,9 +1,10 @@
 from .retrieval import retrieve
-from .generation import GeneratedAnswer, cited_numbers, generate_answer, rewrite_question, source_label
+from .generation import cited_numbers, generate_answer, rewrite_question, source_label
 
 def answer_question(question: str, history: list[dict] | tuple = ()) -> dict:
     """history holds earlier {"question", "answer"} turns of this conversation."""
-    rewritten = rewrite_question(question, list(history)) if history else GeneratedAnswer(question)
+    # Documents are formal, so even a first question is searched in formal wording.
+    rewritten = rewrite_question(question, list(history))
     search_question = rewritten.text
     hits = retrieve(search_question)
     generated = generate_answer(search_question, hits)

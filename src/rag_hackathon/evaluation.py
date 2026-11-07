@@ -170,7 +170,7 @@ def run_settings() -> dict:
     }
 
 def evaluate(questions: list[dict], *, with_answers: bool = False) -> dict:
-    """Score every question. with_answers calls the LLM once per question, twice for follow-ups."""
+    """Score every question. with_answers calls the LLM twice per question."""
     rows = []
     for question in questions:
         row = {"id": question["id"], "category": question["category"], "question": question["question"]}
@@ -187,7 +187,7 @@ def evaluate(questions: list[dict], *, with_answers: bool = False) -> dict:
             except Exception as exc:
                 failure = f"{type(exc).__name__}: {exc}"
         search_question = result.get("search_question", question["question"]) if result else question["question"]
-        if history:
+        if result or history:
             row["search_question"] = search_question
         hits = retrieve(search_question)
         row.update(score_retrieval(question, hits))

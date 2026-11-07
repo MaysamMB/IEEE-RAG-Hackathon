@@ -13,7 +13,7 @@ from chromadb.api.models.Collection import Collection
 import pymupdf
 import pytest
 
-from rag_hackathon import config, ingest as ingest_module, retrieval, vector_store
+from rag_hackathon import config, documents, ingest as ingest_module, retrieval, vector_store
 from rag_hackathon.chunking import chunk_records, chunk_text
 from rag_hackathon.documents import load_documents
 from rag_hackathon.ingest import ingest
@@ -329,6 +329,26 @@ def test_txt_source_metadata_with_arabic_filename(docs):
     assert metadata["source_path"] == "سياسات/دليل.txt"
     assert metadata["page"] == 1
     assert metadata["file_type"] == "txt"
+
+
+def test_source_version_comes_from_the_manifest(docs, tmp_path, monkeypatch):
+    manifest = tmp_path / "versions.json"
+    manifest.write_text('{"a/dated.txt": "2022/2023"}', encoding="utf-8")
+    monkeypatch.setattr(documents, "SOURCE_VERSIONS", manifest)
+    write_txt(docs, "a/dated.txt", "dated text")
+    write_txt(docs, "a/undated.txt", "undated text")
+
+    records = {r["metadata"]["source"]: r["metadata"] for r in load_documents(docs)}
+
+    assert records["dated.txt"]["version"] == "2022/2023"
+    assert "version" not in records["undated.txt"]
+
+
+def test_missing_version_manifest_means_no_versions(docs, tmp_path, monkeypatch):
+    monkeypatch.setattr(documents, "SOURCE_VERSIONS", tmp_path / "absent.json")
+    write_txt(docs, "a.txt", "text")
+
+    assert "version" not in load_documents(docs)[0]["metadata"]
 
 
 # --- Arabic chunk boundaries ---

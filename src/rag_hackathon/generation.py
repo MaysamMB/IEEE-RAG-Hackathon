@@ -27,18 +27,25 @@ reply with exactly this sentence and nothing else: {REFUSAL_MESSAGE}
 Cite supporting source identifiers exactly as [S1], [S2], etc., always with the
 Latin letter S and digits, even inside Arabic text, and with no spaces or other
 characters inside the brackets. Never write the identifier with an Arabic letter.
-Do not invent page numbers, sources, facts, or quotations. If sources conflict,
-explain the conflict and cite each relevant source. Files named regulations or
-instructions are the binding reference over general pages and guides, so say so.
+Do not invent page numbers, sources, facts, or quotations.
+Values that apply to different programs or student groups are not a conflict.
+If sources give different values for the same thing, adopt the value from the
+source with the latest Version as the answer, then mention the older value and
+its Version in one short sentence, citing both sources. If the Versions are
+equal, adopt the file named regulations or instructions, because it is the
+binding reference, and say so. If a conflicting source has no Version, do not
+choose: explain the conflict and cite each source.
 Answer in simple Modern Standard Arabic, even when the question is in dialect.
 Write plain text only: never use LaTeX or math markup. Write calculations
 like this: 45 × 18 = 810.
 """
 
 REWRITE_PROMPT = """Rewrite the student's latest question as one complete, standalone
-Arabic question, using the conversation only to resolve what it refers to.
-Do not answer it. Do not add facts or conditions the student did not state.
-If it is already complete, or is unrelated to the conversation, return it unchanged.
+question in simple Modern Standard Arabic, using the formal terms found in university
+regulations in place of dialect words. Use the conversation, if any, only to resolve
+what the question refers to. Do not answer it. Do not add facts or conditions the
+student did not state, and keep every number as it is.
+If it is not about university study, return it unchanged.
 Return only the question.
 """
 
@@ -107,12 +114,12 @@ def _chat(system: str, user: str, max_tokens: int) -> GeneratedAnswer:
     return GeneratedAnswer(text, usage.prompt_tokens if usage else 0, usage.completion_tokens if usage else 0)
 
 def rewrite_question(question: str, history: list[dict]) -> GeneratedAnswer:
-    """Turn a follow-up into a standalone question so retrieval can find its evidence."""
+    """Turn dialect or a follow-up into a formal standalone question for retrieval."""
     turns = "\n".join(
         f"Student: {turn['question']}\nAdvisor: {turn['answer']}"
         for turn in history[-MAX_HISTORY_TURNS:]
     )
-    prompt = f"Conversation:\n{turns}\n\nLatest question: {question}"
+    prompt = f"Conversation:\n{turns or '(none)'}\n\nLatest question: {question}"
     try:
         return _chat(REWRITE_PROMPT, prompt, max_tokens=300)
     except Exception:
@@ -128,9 +135,10 @@ def generate_answer(question: str, hits: list[dict]) -> GeneratedAnswer:
     for index, hit in enumerate(hits, start=1):
         meta = hit["metadata"]
         article = f"; Article: {meta['article']}" if meta.get("article") else ""
+        version = f"; Version: {meta['version']}" if meta.get("version") else ""
         context_parts.append(
             f"[S{index}] Source: {source_label(meta)}; "
-            f"Page: {meta.get('page', 'Unknown')}{article}\n{hit['text']}"
+            f"Page: {meta.get('page', 'Unknown')}{article}{version}\n{hit['text']}"
         )
     prompt = (
         "Retrieved context:\n\n" + "\n\n---\n\n".join(context_parts)
