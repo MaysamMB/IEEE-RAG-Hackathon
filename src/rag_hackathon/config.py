@@ -9,6 +9,11 @@ class Settings:
     llm_api_key: str = os.getenv("LLM_API_KEY", "")
     llm_base_url: str = os.getenv("LLM_BASE_URL", "")
     llm_model: str = os.getenv("LLM_MODEL", "")
+    # Optional: a light model for rewriting, and another for when the main quota runs out.
+    llm_rewrite_model: str = os.getenv("LLM_REWRITE_MODEL", "")
+    llm_fallback_model: str = os.getenv("LLM_FALLBACK_MODEL", "")
+    # Optional, for reasoning models only: low spends less of the daily quota on thinking.
+    llm_reasoning_effort: str = os.getenv("LLM_REASONING_EFFORT", "")
     embedding_model: str = os.getenv(
         "EMBEDDING_MODEL",
         "intfloat/multilingual-e5-small",

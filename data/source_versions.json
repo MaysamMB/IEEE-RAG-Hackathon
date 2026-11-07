@@ -1,11 +1,16 @@
 {
   "university/guide-2022-2023.pdf": "2022/2023",
   "university/bachelor-plans-2020-2021.pdf": "2020/2021",
-  "university/diploma-plans-2020.pdf": "2020",
   "university/factbook.pdf": "2024/2025",
   "university/ppu_about.txt": "2026-11-07",
   "university/ppu_admission_instructions.txt": "2026-11-07",
   "university/ppu_bachelor_regulations.txt": "2026-11-07",
   "university/ppu_bridging_transfer.txt": "2026-11-07",
-  "university/ppu_diploma_regulations.txt": "2026-11-07"
+  "university/ppu_diploma_regulations.txt": "2026-11-07",
+  "university/plan-computer-science-2022.pdf": "2022",
+  "university/plan-data-science-2022.pdf": "2022",
+  "university/plan-computer-engineering-2022.pdf": "2022",
+  "university/plan-embedded-systems-2022.pdf": "2022",
+  "university/plan-information-security-2022.pdf": "2022",
+  "university/plan-information-technology-2022.pdf": "2022"
 }
