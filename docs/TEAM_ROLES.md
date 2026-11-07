@@ -12,7 +12,7 @@ These are suggested primary ownership areas, not silos. Every member should unde
 
 ## Member B — Backend and Generation
 - Python application structure
-- Claude API integration and prompt design
+- LLM integration and prompt design
 - Grounding and refusal behavior
 - Source/page citation mapping
 - Error handling and configuration

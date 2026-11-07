@@ -1,0 +1,704 @@
+[
+  {
+    "id": "P01",
+    "category": "direct_fact",
+    "question": "ما الحد الأعلى للعبء الدراسي للطالب المنتظم في الفصل الدراسي؟",
+    "expected_answer_facts": [
+      "18|ثماني عشرة"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "P02",
+    "category": "direct_fact",
+    "question": "ما الحد الأدنى للعبء الدراسي للطالب المنتظم في الفصل الدراسي؟",
+    "expected_answer_facts": [
+      "12|اثنتي عشرة|اثنتا عشرة"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "P03",
+    "category": "direct_fact",
+    "question": "ما المدة القصوى لتأجيل الدراسة لطالب البكالوريوس؟",
+    "expected_answer_facts": [
+      "سنتين|سنتان"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "P04",
+    "category": "direct_fact",
+    "question": "ما أقصى مدة يقضيها طالب البكالوريوس مسجلاً في كلية الهندسة؟",
+    "expected_answer_facts": [
+      "سبع|7"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "P05",
+    "category": "dialect",
+    "question": "شو بصير إذا غبت أكثر من المسموح؟",
+    "expected_answer_facts": [
+      "يحرم|حرمان|يُحرم|تحرم",
+      "صفر"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "P06",
+    "category": "dialect",
+    "question": "كم ساعة بقدر أسجل بالفصل الصيفي؟",
+    "expected_answer_facts": [
+      "10|عشر"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "P07",
+    "category": "dialect",
+    "question": "قديش عندي وقت أقدم طلب مراجعة لعلامة الفاينل؟",
+    "expected_answer_facts": [
+      "ثلاثة أيام|3 أيام"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "P08",
+    "category": "dialect",
+    "question": "جبت 75 بمساق، بقدر أعيده عشان أرفع معدلي؟",
+    "expected_answer_facts": [
+      "70"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "P09",
+    "category": "paraphrase",
+    "question": "حتى متى يمكنني الانسحاب من مساق دون أن يدخل في معدلي الفصلي؟",
+    "expected_answer_facts": [
+      "العاشر"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "P10",
+    "category": "paraphrase",
+    "question": "كم مرة يمكنني التغيب عن المحاضرات في المساق الواحد؟",
+    "expected_answer_facts": [
+      "محاضرتين|محاضرتان"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "P11",
+    "category": "table",
+    "question": "ما تقدير الطالب إذا كان معدله التراكمي 86%؟",
+    "expected_answer_facts": [
+      "ممتاز"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "P12",
+    "category": "table",
+    "question": "طالب أنهى 70 ساعة معتمدة، في أي سنة دراسية يصنف؟",
+    "expected_answer_facts": [
+      "سنة ثالثة|السنة الثالثة"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "P13",
+    "category": "table",
+    "question": "ما نسبة الحسم من القسط لطالب جديد انسحب خلال الأسبوع الثاني من بداية العام الدراسي؟",
+    "expected_answer_facts": [
+      "50"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "P14",
+    "category": "table",
+    "question": "ما المتطلب السابق لمساق تفاضل وتكامل 2؟",
+    "expected_answer_facts": [
+      "4004|تفاضل وتكامل 1|Calculus 1"
+    ],
+    "expected_sources": [
+      {
+        "source": "bachelor-plans-2020-2021.pdf"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "P15",
+    "category": "multi_article",
+    "question": "معدلي التراكمي 60 وبدي أسجل 18 ساعة، بقدر؟",
+    "expected_answer_facts": [
+      "15|خمس عشرة"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "P16",
+    "category": "multi_article",
+    "question": "ما المعدلات المطلوبة للتخرج من البكالوريوس؟",
+    "expected_answer_facts": [
+      "65",
+      "70"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "P17",
+    "category": "multi_document",
+    "question": "ما الحد الأعلى للساعات في الفصل الدراسي لطالب البكالوريوس ولطالب الدبلوم؟",
+    "expected_answer_facts": [
+      "18|ثماني عشرة"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      },
+      {
+        "source": "ppu_diploma_regulations.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "P18",
+    "category": "follow_up",
+    "question": "وإذا كان معدلي الفصلي والتراكمي 85؟",
+    "history": [
+      {
+        "question": "ما الحد الأعلى للعبء الدراسي للطالب المنتظم في الفصل الدراسي؟",
+        "answer": "الحد الأعلى هو 18 ساعة معتمدة في الفصل الدراسي [S1]."
+      }
+    ],
+    "expected_answer_facts": [
+      "21"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "P19",
+    "category": "follow_up",
+    "question": "وفي الكليات غير الهندسية؟",
+    "history": [
+      {
+        "question": "ما الحد الأدنى لمدة دراسة البكالوريوس في كلية الهندسة؟",
+        "answer": "الحد الأدنى في كلية الهندسة أربع سنوات [S1]."
+      }
+    ],
+    "expected_answer_facts": [
+      "ثلاث"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "P20",
+    "category": "not_in_documents",
+    "question": "متى موعد امتحان الخوارزميات؟",
+    "expected_answer_facts": [],
+    "expected_sources": [],
+    "should_refuse": true
+  },
+  {
+    "id": "P21",
+    "category": "not_in_documents",
+    "question": "شو معدلي التراكمي هسا؟",
+    "expected_answer_facts": [],
+    "expected_sources": [],
+    "should_refuse": true
+  },
+  {
+    "id": "P22",
+    "category": "not_in_documents",
+    "question": "من يدرّس مساق تراكيب البيانات هذا الفصل؟",
+    "expected_answer_facts": [],
+    "expected_sources": [],
+    "should_refuse": true
+  },
+  {
+    "id": "P23",
+    "category": "out_of_scope",
+    "question": "اكتب لي قصيدة عن الجامعة",
+    "expected_answer_facts": [],
+    "expected_sources": [],
+    "should_refuse": true
+  },
+  {
+    "id": "P24",
+    "category": "out_of_scope",
+    "question": "ما وصفة تحضير المقلوبة؟",
+    "expected_answer_facts": [],
+    "expected_sources": [],
+    "should_refuse": true
+  },
+  {
+    "id": "PPU01",
+    "category": "direct_fact",
+    "question": "ما الحد الأعلى للعبء الدراسي لطالب البكالوريوس في الفصل العادي في جامعة بوليتكنك فلسطين؟",
+    "reference_answer": "الحد الأعلى 18 ساعة معتمدة في الفصل الدراسي العادي، و10 ساعات في الفصل الصيفي، حسب المادة (4) من تعليمات الدراسة لدرجة البكالوريوس.",
+    "expected_answer_facts": [
+      "18|ثماني عشرة"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "PPU02",
+    "category": "paraphrase",
+    "question": "كم أقصى عدد ساعات بقدر أسجله بالصيفي؟",
+    "reference_answer": "الحد الأعلى في الفصل الصيفي 10 ساعات معتمدة (المادة 4).",
+    "expected_answer_facts": [
+      "10|عشر"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "PPU03",
+    "category": "direct_fact",
+    "question": "ما علامة النجاح في المساق وما هو الصفر الجامعي؟",
+    "reference_answer": "علامة النجاح في المساق 60% فأكثر، والصفر الجامعي 45% (المادتان 12 و13).",
+    "expected_answer_facts": [
+      "60",
+      "45"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "PPU04",
+    "category": "dialect",
+    "question": "شو بصير إذا غبت أكثر من المسموح بدون عذر؟",
+    "reference_answer": "المسموح بدون عذر محاضرتان نظريتان (أو ما يعادلهما) لكل ساعة معتمدة. إذا تجاوزت ذلك تحرم من الامتحان النهائي وتعتبر نتيجتك في المساق صفراً (المادة 6).",
+    "expected_answer_facts": [
+      "محاضرتين|محاضرتان",
+      "يحرم|حرمان|تحرم|الحرمان",
+      "صفر"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "PPU05",
+    "category": "direct_fact",
+    "question": "ماذا يحدث إذا تجاوز الطالب حد الغياب بعذر مقبول؟",
+    "reference_answer": "يسمح بأربع محاضرات نظرية لكل ساعة معتمدة بعذر مقبول، وإذا تجاوزها يعتبر منسحباً من المساق دون رسوب بعد تقديم طلب خطي (المادة 6).",
+    "expected_answer_facts": [
+      "أربع",
+      "منسحب",
+      "خطي"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "PPU06",
+    "category": "direct_fact",
+    "question": "متى ينذر طالب البكالوريوس أكاديمياً؟",
+    "reference_answer": "ينذر إذا انخفض معدله التراكمي عن 65% في أي فصل عدا الفصل الأول، أو إذا انخفض معدله التخصصي عن 70% بعد دراسة 18 ساعة معتمدة على الأقل من التخصص (المادة 14).",
+    "expected_answer_facts": [
+      "65",
+      "الأول",
+      "70",
+      "18|ثماني عشرة"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "PPU07",
+    "category": "multi_rule",
+    "question": "أنا منذر أكاديمياً، كم ساعة أقدر أسجل هذا الفصل؟",
+    "reference_answer": "الطالب المنذر لا يسجل أكثر من 15 ساعة معتمدة، إلا إذا توقف تخرجه في الفصل الأخير على 18 ساعة (المادة 14). والحد الأدنى العام 12 ساعة (المادة 4).",
+    "expected_answer_facts": [
+      "15|خمس عشرة",
+      "18|ثماني عشرة"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "PPU08",
+    "category": "multi_rule",
+    "question": "معدلي الفصلي والتراكمي 85% بالفصل الماضي، بقدر أسجل 21 ساعة؟",
+    "reference_answer": "نعم، يجوز أن يصل العبء إلى 21 ساعة إذا كان المعدل الفصلي والتراكمي في الفصل السابق 80% فأكثر لكل منهما، بشرط موافقة رئيس الدائرة والمشرف الأكاديمي (المادة 4).",
+    "expected_answer_facts": [
+      "21",
+      "80",
+      "رئيس الدائرة"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "PPU09",
+    "category": "follow_up",
+    "conversation_history": [
+      {
+        "role": "user",
+        "content": "معدلي الفصلي والتراكمي 85% بالفصل الماضي، بقدر أسجل 21 ساعة؟"
+      }
+    ],
+    "question": "وإذا كان معدلي 75%؟",
+    "reference_answer": "بمعدل 75% لا تنطبق حالة المعدل (تشترط 80% فأكثر)، فيبقى الحد الأعلى 18 ساعة، إلا إذا كان تخرجك يتوقف على تسجيل ساعات أكثر (المادة 4).",
+    "expected_answer_facts": [
+      "18|ثماني عشرة",
+      "80"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "PPU10",
+    "category": "direct_fact",
+    "question": "ما حالات الفصل الأكاديمي من التخصص؟",
+    "reference_answer": "يفصل الطالب إذا لم يزل الإنذار بعد ثلاثة فصول، أو استنكف عن التسجيل، أو استنفد المدة القصوى، أو كان معدله الفصلي أقل من 55% في الفصل الأول، أو التراكمي أقل من 55% بعد أي فصل لاحق، أو فصل من تخصص ثالث (المادة 15).",
+    "expected_answer_facts": [
+      "ثلاثة فصول|ثلاث|3 فصول",
+      "55"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "PPU11",
+    "category": "direct_fact",
+    "question": "ما شروط التخرج من درجة البكالوريوس؟",
+    "reference_answer": "النجاح في جميع المواد بعلامة 60% على الأقل، ومعدل تراكمي عام 65% على الأقل، ومعدل تخصصي 70% على الأقل، وإنهاء التدريب الميداني، وإنهاء العمل التطوعي (المادة 21).",
+    "expected_answer_facts": [
+      "60",
+      "65",
+      "70",
+      "التدريب الميداني",
+      "التطوعي"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "PPU12",
+    "category": "dialect",
+    "question": "بدي أعيد مادة جبت فيها 72، مسموح؟",
+    "reference_answer": "لا، لا يجوز إعادة مساق حصلت فيه على 70% فأكثر (المادة 10).",
+    "expected_answer_facts": [
+      "لا يجوز|لا يمكن|غير مسموح|لا يسمح",
+      "70"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "PPU13",
+    "category": "direct_fact",
+    "question": "إذا أعدت مساقاً، أي علامة تحسب في المعدل؟",
+    "reference_answer": "تحسب العلامة الأحدث فقط وتحذف الأولى من المعدل، مع ظهور العلامتين في الكشف، وتحسب ساعات المساق مرة واحدة (المادة 10).",
+    "expected_answer_facts": [
+      "الأحدث|الجديدة|الثانية",
+      "العلامتان|العلامتين|الأولى والثانية|كلتا"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "PPU14",
+    "category": "direct_fact",
+    "question": "متى يمكنني الانسحاب من مساق مع رصد علامة W وما أثرها؟",
+    "reference_answer": "بعد الأسبوع الأول وحتى نهاية الأسبوع العاشر، ترصد W ولا تحسب في المعدل الفصلي لكن يفقد الطالب رسوم المساق. بعد الأسبوع العاشر ترصد WF ويحسب الصفر الجامعي 45% (المادة 7).",
+    "expected_answer_facts": [
+      "العاشر",
+      "W",
+      "رسوم",
+      "WF"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "PPU15",
+    "category": "table",
+    "question": "كم ساعة معتمدة لدرجة البكالوريوس في الهندسة وكم مدتها؟",
+    "reference_answer": "حسب تعليمات الالتحاق: من 160 إلى 170 ساعة معتمدة، ومدة الدراسة خمس سنوات.",
+    "expected_answer_facts": [
+      "160",
+      "170",
+      "خمس"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_admission_instructions.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "PPU16",
+    "category": "conflicting_sources",
+    "question": "كم ساعة معتمدة لازم أخلص عشان أتخرج بكالوريوس بتخصص غير هندسي؟",
+    "reference_answer": "المصادر غير متطابقة: تعليمات الالتحاق تذكر 120 - 130 ساعة معتمدة، بينما صفحة (عن الجامعة) تذكر 132 ساعة. العدد الدقيق يحدده الخطة الدراسية لتخصصك، ويفضل مراجعة المشرف الأكاديمي أو عمادة القبول والتسجيل.",
+    "expected_answer_facts": [
+      "120",
+      "130",
+      "132"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_admission_instructions.txt"
+      },
+      {
+        "source": "ppu_about.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "PPU17",
+    "category": "conflicting_sources",
+    "question": "هل الحد الأعلى للعبء الدراسي 18 أم 19 ساعة؟",
+    "reference_answer": "تعليمات الدراسة لدرجة البكالوريوس (المادة 4) تحدده بـ 18 ساعة، بينما صفحة (عن الجامعة) التعريفية تذكر 19 ساعة. التعليمات الرسمية هي المرجع الأدق، فالجواب المعتمد 18 ساعة مع الإشارة للاختلاف.",
+    "expected_answer_facts": [
+      "18|ثماني عشرة",
+      "19",
+      "التعليمات"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      },
+      {
+        "source": "ppu_about.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "PPU18",
+    "category": "direct_fact",
+    "question": "ما منح التفوق للطلبة المنتظمين حسب المعدل الفصلي؟",
+    "reference_answer": "بشرط النجاح في 15 ساعة على الأقل وعدم وجود عقوبة تأديبية: 95% فأكثر إعفاء كامل، ومن 90% إلى أقل من 95% إعفاء الثلثين، ومن 87% إلى أقل من 90% إعفاء 40%، وتستفيد منها في الفصل التالي (المادة 22).",
+    "expected_answer_facts": [
+      "95",
+      "90",
+      "87",
+      "40",
+      "15|خمس عشرة"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      },
+      {
+        "source": "ppu_admission_instructions.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "PPU19",
+    "category": "direct_fact",
+    "question": "طالب جديد انسحب في الأسبوع الثاني، كم يخسر من القسط؟",
+    "reference_answer": "يحسم 50% من القسط إضافة إلى رسوم التسجيل. وبعد أسبوعين دراسيين لا يعاد أي مبلغ (المادة 8 وتعليمات الالتحاق).",
+    "expected_answer_facts": [
+      "50",
+      "التسجيل"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_bachelor_regulations.txt"
+      },
+      {
+        "source": "ppu_admission_instructions.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "PPU20",
+    "category": "direct_fact",
+    "question": "ما شروط اعتبار حامل البجروت من الفرع العلمي؟",
+    "reference_answer": "إذا نجح في 9 وحدات علمية على الأقل منها 4 وحدات رياضيات، أو في 11 وحدة علمية على الأقل منها 3 وحدات رياضيات.",
+    "expected_answer_facts": [
+      "9|تسع",
+      "11|إحدى عشرة"
+    ],
+    "expected_sources": [
+      {
+        "source": "ppu_admission_instructions.txt"
+      }
+    ],
+    "should_refuse": false
+  },
+  {
+    "id": "PPU21",
+    "category": "not_in_documents",
+    "question": "كم سعر الساعة المعتمدة في تخصص هندسة الحاسوب؟",
+    "reference_answer": "هذه المعلومة غير موجودة في المستندات المتاحة (تعليمات الالتحاق تنص صراحة على أنها لا تذكر قيم الأقساط). يرجى مراجعة الدائرة المالية أو عمادة القبول والتسجيل.",
+    "expected_answer_facts": [],
+    "expected_sources": [],
+    "should_refuse": true
+  },
+  {
+    "id": "PPU22",
+    "category": "not_in_documents",
+    "question": "متى امتحان نهائي مادة هياكل البيانات هذا الفصل؟",
+    "reference_answer": "مواعيد الامتحانات غير موجودة في المستندات المتاحة. يرجى مراجعة جدول الامتحانات الرسمي أو عمادة القبول والتسجيل.",
+    "expected_answer_facts": [],
+    "expected_sources": [],
+    "should_refuse": true
+  },
+  {
+    "id": "PPU23",
+    "category": "out_of_scope",
+    "question": "اكتبلي قصيدة عن جامعة البوليتكنك",
+    "reference_answer": "اعتذار: المساعد مخصص للإجابة عن الأسئلة الأكاديمية من أنظمة الجامعة وتعليماتها فقط.",
+    "expected_answer_facts": [],
+    "expected_sources": [],
+    "should_refuse": true
+  }
+]

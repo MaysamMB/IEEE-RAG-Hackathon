@@ -36,6 +36,16 @@ def load_questions(path: str | Path) -> list[dict]:
         raise ValueError("Question IDs must be unique.")
     return questions
 
+def conversation_turns(question: dict) -> list[dict]:
+    """Read earlier turns from either "history" or role-based "conversation_history"."""
+    turns = list(question.get("history", []))
+    for message in question.get("conversation_history", []):
+        if message["role"] == "user":
+            turns.append({"question": message["content"], "answer": ""})
+        elif turns:
+            turns[-1]["answer"] = message["content"]
+    return turns
+
 def source_matches(metadata: dict, expected: dict) -> bool:
     name = expected["source"]
     same_file = name in (metadata.get("source_path"), metadata.get("source"))
@@ -156,28 +166,41 @@ def run_settings() -> dict:
         "indexed_chunks": collection.count() if collection is not None else 0,
         "top_k": settings.top_k,
         "max_cosine_distance": settings.max_cosine_distance,
-        "generation_model": settings.anthropic_model,
+        "generation_model": settings.llm_model,
     }
 
 def evaluate(questions: list[dict], *, with_answers: bool = False) -> dict:
-    """Score every question. with_answers calls the paid LLM once per question."""
+    """Score every question. with_answers calls the LLM once per question, twice for follow-ups."""
     rows = []
     for question in questions:
         row = {"id": question["id"], "category": question["category"], "question": question["question"]}
-        hits = retrieve(question["question"])
+        history = conversation_turns(question)
+        # A follow-up only makes sense after rewriting, which needs the model.
+        if history and not with_answers:
+            row.update({"top_distance": None, "skipped": "follow-up: run with --answers"})
+            rows.append(row)
+            continue
+        result, failure = None, None
+        if with_answers:
+            try:
+                result = answer_question(question["question"], history)
+            except Exception as exc:
+                failure = f"{type(exc).__name__}: {exc}"
+        search_question = result.get("search_question", question["question"]) if result else question["question"]
+        if history:
+            row["search_question"] = search_question
+        hits = retrieve(search_question)
         row.update(score_retrieval(question, hits))
         row["retrieved"] = [
             {"source": h["metadata"].get("source_path"), "page": h["metadata"].get("page"), "distance": round(h["distance"], 3)}
             for h in hits
         ]
-        if with_answers:
-            try:
-                result = answer_question(question["question"])
-                row["answer"] = result["answer"]
-                row["input_tokens"] = result["input_tokens"]
-                row["output_tokens"] = result["output_tokens"]
-                row.update(score_answer(question, result["answer"], result["sources"], result["refused"]))
-            except Exception as exc:
-                row["error"] = f"{type(exc).__name__}: {exc}"
+        if failure:
+            row["error"] = failure
+        elif result:
+            row["answer"] = result["answer"]
+            row["input_tokens"] = result["input_tokens"]
+            row["output_tokens"] = result["output_tokens"]
+            row.update(score_answer(question, result["answer"], result["sources"], result["refused"]))
         rows.append(row)
     return {"settings": run_settings(), "summary": summarize(rows), "rows": rows}
